@@ -2,11 +2,16 @@
 BaseGame — classe abstraite dont héritent tous les mini-jeux
 Chaque jeu doit implémenter : setup(), update(), draw(), is_over()
 """
+from time import time
+
 from core.supabase_client import save_features_to_supabase
 import pygame
 from abc import ABC, abstractmethod
 from core.controller import Controller, ControllerState
 from core.recorder import SessionRecorder, save_features_to_csv
+import time
+import threading
+from core.supabase_client import save_features_to_supabase, send_inputs_batch
 
 
 class BaseGame(ABC):
@@ -78,6 +83,9 @@ class BaseGame(ABC):
 
         self.setup()
         self.recorder.start()
+        self._inputs_buffer = []
+        self._last_flush = time.time()
+        self._session_token = f"{self.player_name}_{int(time.time())}"
         self.running = True
 
         while self.running:
@@ -94,6 +102,35 @@ class BaseGame(ABC):
 
             # Enregistrement
             self.recorder.record(controller_state)
+
+            # Bufferiser l'input courant
+            self._inputs_buffer.append({
+                "player_name":   self.player_name,
+                "game_id":       self.game_id,
+                "session_token": self._session_token,
+                "lx":  controller_state.axis_left_x,
+                "ly":  controller_state.axis_left_y,
+                "rx":  controller_state.axis_right_x,
+                "ry":  controller_state.axis_right_y,
+                "lt":  controller_state.trigger_left,
+                "rt":  controller_state.trigger_right,
+                "btn_a": bool(controller_state.buttons.get(0, False)),
+                "btn_b": bool(controller_state.buttons.get(1, False)),
+                "btn_x": bool(controller_state.buttons.get(2, False)),
+                "btn_y": bool(controller_state.buttons.get(3, False)),
+                "event_type": controller_state.source,
+            })
+
+            # Flush toutes les 500ms
+            if time.time() - self._last_flush >= 0.5:
+                if self._inputs_buffer:
+                    threading.Thread(
+                        target=send_inputs_batch,
+                        args=(self._inputs_buffer.copy(),),
+                        daemon=True
+                    ).start()
+                    self._inputs_buffer.clear()
+                self._last_flush = time.time()
 
             # Logique jeu
             self.update(controller_state, dt)
