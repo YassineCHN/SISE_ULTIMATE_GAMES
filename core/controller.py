@@ -60,7 +60,7 @@ class Controller:
         print(f"🎮 Manette détectée : {self.joystick.get_name()}")
         if "xbox" in name or "xinput" in name:
             self.controller_type = "xbox"
-        elif "playstation" in name or "dualshock" in name or "dualsense" in name:
+        elif any(k in name for k in ("playstation", "dualshock", "dualsense", "ps4", "ps5", "ps3", "sony", "wireless controller")):
             self.controller_type = "ps"
         self._axis_map = self.AXIS_MAP[self.controller_type]
         print(f"   Type détecté : {self.controller_type}")
@@ -115,10 +115,18 @@ class Controller:
                 else 0.0
             )
 
-        lt_raw = safe_axis(m["lt"])
-        rt_raw = safe_axis(m["rt"])
-        lt = (lt_raw + 1) / 2 if self.controller_type == "xbox" else lt_raw
-        rt = (rt_raw + 1) / 2 if self.controller_type == "xbox" else rt_raw
+        # Xbox 360 DirectInput : gâchettes combinées sur l'axe 2
+        # (LT = côté négatif, RT = côté positif)
+        if self.controller_type == "xbox" and num_axes <= 5:
+            combined = safe_axis(2)
+            lt = max(0.0, -combined)
+            rt = max(0.0, combined)
+        else:
+            lt_raw = safe_axis(m["lt"])
+            rt_raw = safe_axis(m["rt"])
+            # Normalisation universelle : gère [-1,1] (Xbox/PS Linux) et [0,1] (PS Windows)
+            lt = (lt_raw + 1) / 2 if lt_raw < -0.5 else max(0.0, lt_raw)
+            rt = (rt_raw + 1) / 2 if rt_raw < -0.5 else max(0.0, rt_raw)
         buttons = {
             i: bool(self.joystick.get_button(i))
             for i in range(self.joystick.get_numbuttons())
