@@ -90,10 +90,28 @@ git clone https://github.com/YassineCHN/SISE_ULTIMATE_GAMES.git
 cd SISE_ULTIMATE_GAMES
 ```
 
-### 2. Créer un environnement virtuel (recommandé)
+### 2. Créer un environnement virtuel
 
+Choisissez l'une des trois méthodes selon votre gestionnaire de paquets :
+
+**pip + venv** (standard)
 ```bash
 python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+```
+
+**conda**
+```bash
+conda create -n sise-games python=3.10
+conda activate sise-games
+```
+
+**uv** (recommandé — ultra-rapide)
+```bash
+uv venv --python 3.10
 # Windows
 .venv\Scripts\activate
 # macOS / Linux
@@ -103,7 +121,14 @@ source .venv/bin/activate
 ### 3. Installer les dépendances
 
 ```bash
+# pip / venv
 pip install -r requirements.txt
+
+# conda
+conda install --file requirements.txt
+
+# uv
+uv pip install -r requirements.txt
 ```
 
 ### 4. Configurer les variables d'environnement
@@ -123,39 +148,49 @@ MISTRAL_API_KEY=votre_clé_api_mistral
 
 ## 🎮 Utilisation
 
-### Lancer un jeu
+### Workflow recommandé : tout depuis le dashboard
 
-```bash
-# Syntaxe générale
-python main.py <joueur> <jeu>
+L'application est conçue pour être pilotée depuis le **dashboard Dash**. C'est lui qui lance les jeux, affiche les stats en temps réel et centralise toutes les données.
 
-# Exemples
-python main.py Modou reflex
-python main.py Yassine shooter
-python main.py Nico racing
-python main.py Nico labyrinth
-```
-
-**Jeux disponibles :** `reflex` · `labyrinth` · `shooter` · `racing`
-
-### Lancer l'agent imitateur
-
-```bash
-# Imiter le style d'un joueur enregistré
-python main.py Agent shooter --agent Modou --mode player
-
-# Avec un niveau de bruit configurable (0 = parfait, 1 = très bruité)
-python main.py Agent racing --agent Yassine --noise 0.3
-```
-
-### Lancer le dashboard
+**1. Démarrer le dashboard**
 
 ```bash
 cd app
 python app.py
 ```
 
-Ouvrir ensuite [http://localhost:8050](http://localhost:8050) dans votre navigateur.
+Ouvrir [http://localhost:8050](http://localhost:8050) dans votre navigateur.
+
+**2. Jouer depuis la page "Live Session"**
+
+- Saisir votre nom de joueur
+- Choisir un jeu (Reflex, Labyrinthe, Shooter, Racing)
+- Cliquer sur **Lancer** — la fenêtre Pygame s'ouvre, les inputs sont capturés en temps réel
+- Le dashboard se met à jour en direct : flux d'inputs, score, métriques manette
+- À la fin de la session, le résumé IA (Mistral) apparaît automatiquement dans l'onglet **Résumés**
+
+**3. Explorer vos données**
+
+| Page dashboard | Contenu |
+|---|---|
+| 🎮 **Live Session** | Lancement des jeux + visualisation temps réel des inputs |
+| 👤 **Profils** | Clustering UMAP, profil attribué, comparaison entre joueurs |
+| 🏆 **Leaderboard** | Classements par jeu et global |
+| 📋 **Résumés IA** | Analyses Mistral post-session avec conseils personnalisés |
+| 💬 **Chat IA** | Coach conversationnel avec accès à l'historique des sessions |
+| 🤖 **Agent IA** | Lancer l'agent imitateur depuis l'interface |
+
+### Lancement direct en ligne de commande (optionnel)
+
+Il est aussi possible de lancer un jeu sans passer par le dashboard :
+
+```bash
+python main.py <nom_joueur> <jeu>
+# Exemple
+python main.py Modou shooter
+```
+
+> ⚠️ Dans ce cas, les stats ne sont pas visualisées en temps réel — uniquement sauvegardées dans Supabase et consultables ensuite dans le dashboard.
 
 ### Diagnostiquer la manette
 
@@ -212,9 +247,9 @@ Projet réalisé dans le cadre du **Challenge IA Temps Réel — Master SISE 202
 
 | Membre | GitHub |
 |---|---|
-| **Modou Mboup** | — |
+| **Modou Mboup** | [@Modou010](https://github.com/Modou010) |
 | **Yassine Cheniour** | [@YassineCHN](https://github.com/YassineCHN) |
-| **Nico Dena** | — |
+| **Nico Dena** | [@DenaNico1](https://github.com/DenaNico1) |
 
 🔗 **Dépôt GitHub :** [YassineCHN/SISE_ULTIMATE_GAMES](https://github.com/YassineCHN/SISE_ULTIMATE_GAMES/tree/main)
 
