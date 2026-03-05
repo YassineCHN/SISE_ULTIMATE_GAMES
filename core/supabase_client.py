@@ -226,3 +226,68 @@ def fetch_live_inputs(session_token: str = None, limit: int = 60) -> list[dict]:
     except Exception as e:
         print(f"⚠️ fetch inputs_live échoué : {e}")
         return []
+    
+# ─────────────────────────────────────────────────────────────────
+# PATCH À AJOUTER dans core/supabase_client.py
+# Colle ces deux fonctions à la fin du fichier
+# ─────────────────────────────────────────────────────────────────
+
+def fetch_player_sequences(game_id: str, player_name: str) -> list[list[dict]]:
+    """
+    Charge les séquences de frames depuis inputs_live pour un joueur + jeu.
+    Groupe par session_token → retourne une liste de sessions ordonnées par captured_at.
+    Retourne [] si erreur ou aucune donnée.
+    """
+    try:
+        client = _get_client()
+        result = (
+            client.table("inputs_live")
+            .select("*")
+            .eq("player_name", player_name)
+            .eq("game_id", game_id)
+            .order("captured_at", desc=False)
+            .limit(20000)
+            .execute()
+        )
+        rows = result.data or []
+        if not rows:
+            return []
+
+        from collections import defaultdict
+        sessions_dict = defaultdict(list)
+        for row in rows:
+            token = row.get("session_token") or "unknown"
+            sessions_dict[token].append(row)
+
+        # Ne garder que les sessions avec >= 10 frames
+        sequences = [
+            frames for frames in sessions_dict.values()
+            if len(frames) >= 10
+        ]
+        print(f"✅ fetch_player_sequences : {len(sequences)} session(s) "
+              f"· {sum(len(s) for s in sequences)} frames pour {player_name}@{game_id}")
+        return sequences
+
+    except Exception as e:
+        print(f"⚠️  fetch_player_sequences erreur : {e}")
+        return []
+
+
+def fetch_all_players_for_game(game_id: str) -> list[str]:
+    """
+    Retourne la liste des joueurs ayant joué à ce jeu dans inputs_live.
+    """
+    try:
+        client = _get_client()
+        result = (
+            client.table("inputs_live")
+            .select("player_name")
+            .eq("game_id", game_id)
+            .execute()
+        )
+        rows = result.data or []
+        players = list({r["player_name"] for r in rows if r.get("player_name")})
+        return sorted(players)
+    except Exception as e:
+        print(f"⚠️  fetch_all_players_for_game erreur : {e}")
+        return []

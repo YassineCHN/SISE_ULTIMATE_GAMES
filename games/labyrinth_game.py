@@ -37,11 +37,28 @@ class LabyrinthGame(BaseGame):
     def game_id(self) -> str:
         return "labyrinth"
 
+    def _maze_seed(self, maze_number: int = 0) -> int:
+        """Calcule un seed déterministe pour la génération du labyrinthe.
+
+        En mode replay agent : utilise le session_token du joueur humain original
+        → l'agent rejoue exactement le même labyrinthe que le joueur enregistré.
+        En mode humain / stats : utilise le session_token de la session courante.
+        """
+        if self.agent is not None:
+            gen = getattr(self.agent, "generator", None)
+            if gen is not None and hasattr(gen, "current_session_token"):
+                token = gen.current_session_token
+                if token:
+                    return hash(f"{token}_{maze_number}") % (2 ** 31)
+        token = getattr(self, "_session_token", "")
+        return hash(f"{token}_{maze_number}") % (2 ** 31)
+
     def setup(self):
         self.time_elapsed = 0.0
         self.mazes_completed = 0
         self.total_mazes = 3
-        self._generate_maze()
+        self._maze_number = 0
+        self._generate_maze(seed=self._maze_seed(0))
 
         # Stats navigation
         self.total_distance = 0.0
@@ -53,8 +70,10 @@ class LabyrinthGame(BaseGame):
         self._trail = deque(maxlen=30)  # Historique de position pour affichage
         self._move_buffer = (0.0, 0.0)  # Sous-pixel movement
 
-    def _generate_maze(self):
-        """Génère un labyrinthe par DFS récursif"""
+    def _generate_maze(self, seed: int = None):
+        """Génère un labyrinthe par DFS récursif. Si seed fourni, génération reproductible."""
+        if seed is not None:
+            random.seed(seed)
         cols, rows = self.COLS, self.ROWS
         # Grille : True = mur, False = couloir
         self.grid = [[True] * cols for _ in range(rows)]
@@ -174,7 +193,8 @@ class LabyrinthGame(BaseGame):
             time_bonus = max(0, int((self.GAME_DURATION - self.time_elapsed) * 2))
             self.recorder.add_score(100 + time_bonus)
             if self.mazes_completed < self.total_mazes:
-                self._generate_maze()
+                self._maze_number += 1
+                self._generate_maze(seed=self._maze_seed(self._maze_number))
 
     def draw(self, screen: pygame.Surface):
         W, H = self.SCREEN_WIDTH, self.SCREEN_HEIGHT
