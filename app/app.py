@@ -389,25 +389,6 @@ def make_score_bar(theme, df_real=None):
     return fig
 
 
-def make_agent_comparison(theme):
-    t     = THEMES[theme]
-    cats  = ["Réactivité", "Précision", "Fluidité", "Agressivité", "Consistance"]
-    human = [0.72, 0.65, 0.80, 0.55, 0.68]
-    agent = [0.69, 0.67, 0.77, 0.58, 0.71]
-    fig   = go.Figure()
-    fig.add_trace(go.Bar(name="Humain",   x=cats, y=human, marker_color=t["accent2"], opacity=0.85))
-    fig.add_trace(go.Bar(name="Agent IA", x=cats, y=agent, marker_color=t["accent1"], opacity=0.85))
-    fig.update_layout(
-        barmode="group", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=t["text"], family=t["font_body"]),
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=True, gridcolor=t["border"], range=[0, 1]),
-        legend=dict(bgcolor="rgba(0,0,0,0)"),
-        margin=dict(l=20, r=20, t=10, b=20), height=250,
-    )
-    return fig
-
-
 # ─────────────────────────────────────────────
 # PAGES
 # ─────────────────────────────────────────────
@@ -1236,11 +1217,6 @@ def page_agent(theme, df_real=None):
             ], theme, {"flex": "1"}),
 
             html.Div([
-                make_card([
-                    html.Div("Comparaison Humain vs Agent IA", style={"color": t["subtext"], "fontSize": "11px",
-                                                                        "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "12px"}),
-                    dcc.Graph(figure=make_agent_comparison(theme), config={"displayModeBar": False}),
-                ], theme, {"marginBottom": "16px"}),
                 make_card([
                     html.Div("Mode Replay", style={"color": t["subtext"], "fontSize": "11px",
                                                     "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"}),
@@ -2083,10 +2059,12 @@ def refresh_sessions(n):
     try:
         data  = fetch_latest_sessions(limit=200)
         data  = data if data else []
+        rt_values = [d["reaction_time_avg_ms"] for d in data if d.get("reaction_time_avg_ms", 0) > 0]
         stats = {
-            "n_sessions": len(data),
-            "n_players":  len(set(d["player_name"] for d in data)) if data else 0,
-            "avg_score":  int(sum(d["score"] for d in data) / len(data)) if data else 0,
+            "n_sessions":   len(data),
+            "n_players":    len(set(d["player_name"] for d in data)) if data else 0,
+            "avg_score":    int(sum(d["score"] for d in data) / len(data)) if data else 0,
+            "avg_reaction": int(sum(rt_values) / len(rt_values)) if rt_values else None,
         }
         return data, stats
     except Exception:
@@ -2215,11 +2193,14 @@ def update_stats(stats, theme):
     n_players = str(stats.get("n_players",  0)) if stats else "—"
     avg_score = str(stats.get("avg_score",  0)) if stats else "—"
     is_real   = bool(stats and stats.get("n_sessions", 0) > 0)
+    avg_rt    = stats.get("avg_reaction") if stats else None
+    rt_label  = f"{avg_rt} ms" if avg_rt else "— ms"
+    rt_sub    = "Reflex uniquement" if avg_rt else "Aucune session reflex"
     return (
         stat_card("Sessions",      n_sess,    "▲ Supabase live" if is_real else "En attente…", theme).children,
         stat_card("Joueurs",       n_players, "Uniques", theme).children,
         stat_card("Score moyen",   avg_score, "Toutes sessions", theme).children,
-        stat_card("Réaction moy.", "— ms",    "Temps de réponse", theme).children,
+        stat_card("Réaction moy.", rt_label,  rt_sub, theme).children,
         data_badge(is_real, theme),
     )
 

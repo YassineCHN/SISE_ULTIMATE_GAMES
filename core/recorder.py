@@ -203,7 +203,7 @@ class SessionRecorder:
             rt_mean=self._mean(rt),
             lt_brutality=lt_brutality,
             rt_brutality=rt_brutality,
-            reaction_time_avg_ms=0.0,  # À implémenter selon le jeu
+            reaction_time_avg_ms=getattr(self, 'reaction_times_avg', 0.0),
             input_regularity=input_regularity,
             source=source,
             score=self.score,
