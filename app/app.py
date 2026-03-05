@@ -1563,115 +1563,291 @@ def page_agent(theme, df_real=None):
     t = THEMES[theme]
     is_real = df_real is not None
 
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div("🤖 Agent Imitateur", style={"color": t["accent1"], "fontSize": "22px",
-                                                       "fontWeight": "700", "fontFamily": t["font"], "marginBottom": "4px"}),
-                html.Div("Rejoue frame par frame les vrais inputs d'un joueur enregistré",
-                         style={"color": t["subtext"], "fontSize": "13px"}),
-            ]),
-            data_badge(is_real, theme),
-        ], style={"display": "flex", "justifyContent": "space-between",
-                  "alignItems": "flex-start", "marginBottom": "24px"}),
-
-        html.Div([
-            make_card([
-                html.Div("Configuration de l'agent", style={"color": t["subtext"], "fontSize": "11px",
-                                                              "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"}),
-
-                html.Div("Jeu à lancer", style={"color": t["subtext"], "fontSize": "11px", "marginBottom": "6px"}),
-                dcc.Dropdown(
-                    id="dropdown-agent-game",
-                    options=[
-                        {"label": "🎯 Reflex",    "value": "reflex"},
-                        {"label": "🌀 Labyrinth", "value": "labyrinth"},
-                        {"label": "🚀 Shooter",   "value": "shooter"},
-                        {"label": "🏎️ Racing",    "value": "racing"},
-                    ],
-                    value="reflex",
-                    clearable=False,
-                    style={"background": t["card"], "color": "#000", "borderRadius": "6px", "marginBottom": "16px"},
-                ),
-
-                html.Div("Joueur à imiter", style={"color": t["subtext"], "fontSize": "11px", "marginBottom": "6px"}),
-                dcc.Dropdown(
-                    id="dropdown-agent-player",
-                    options=[{"label": p, "value": p} for p in mock_players],
-                    placeholder="Sélectionner un joueur...",
-                    style={"background": t["card"], "color": "#000", "borderRadius": "6px", "marginBottom": "16px"},
-                ),
-
-                html.Div("Fidélité d'imitation", style={"color": t["subtext"], "fontSize": "11px", "marginBottom": "6px"}),
-                dcc.Slider(
-                    id="slider-agent-noise",
-                    min=0, max=100, step=1, value=80,
-                    marks={0: "Libre", 50: "Mixte", 100: "Fidèle"},
-                    tooltip={"placement": "bottom"},
-                    className="custom-slider",
-                ),
-                html.Div(style={"height": "20px"}),
-
-                html.Button("▶ LANCER L'AGENT", id="btn-launch-agent", n_clicks=0, style={
-                    "background": t["gradient"], "border": "none", "color": "#000",
-                    "padding": "12px 32px", "borderRadius": "6px", "cursor": "pointer",
-                    "fontFamily": t["font"], "fontSize": "14px", "fontWeight": "700",
-                    "letterSpacing": "2px", "width": "100%",
-                }),
-                html.Div(style={"height": "8px"}),
-                html.Button("⏹ ARRÊTER", id="btn-stop-agent", n_clicks=0, style={
-                    "background": "transparent", "border": f"1px solid {t['accent3']}",
-                    "color": t["accent3"], "padding": "10px 32px", "borderRadius": "6px",
-                    "cursor": "pointer", "fontFamily": t["font"], "fontSize": "13px", "width": "100%",
-                }),
-                html.Div(id="agent-feedback", style={"marginTop": "12px", "fontSize": "12px"}),
-            ], theme, {"flex": "1"}),
-
-            html.Div([
-                make_card([
-                    html.Div("Comparaison Humain vs Agent IA", style={"color": t["subtext"], "fontSize": "11px",
-                                                                        "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "12px"}),
-                    dcc.Graph(figure=make_agent_comparison(theme), config={"displayModeBar": False}),
-                ], theme, {"marginBottom": "16px"}),
-                make_card([
-                    html.Div("Mode Replay", style={"color": t["subtext"], "fontSize": "11px",
-                                                    "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"}),
-                    html.Div([
-                        html.Div("Frame-by-Frame", style={"color": t["accent1"], "fontSize": "32px",
-                                                           "fontFamily": t["font"], "fontWeight": "700", "textAlign": "center"}),
-                        html.Div("Rejoue les inputs réels depuis Supabase",
-                                 style={"color": t["subtext"], "fontSize": "13px", "textAlign": "center", "marginTop": "8px"}),
-                        html.Div([
-                            html.Div("Bruit gaussien σ", style={"color": t["subtext"], "fontSize": "11px", "marginBottom": "4px"}),
-                            html.Div("configurable via le slider Fidélité",
-                                     style={"color": t["accent2"], "fontSize": "12px", "fontFamily": t["font_body"]}),
-                        ], style={"marginTop": "16px", "padding": "12px", "background": t["bg"],
-                                  "borderRadius": "6px", "border": f"1px solid {t['border']}"}),
-                    ]),
-                ], theme),
-            ], style={"flex": "2", "display": "flex", "flexDirection": "column"}),
-        ], style={"display": "flex", "gap": "16px", "flexWrap": "wrap"}),
-    ])
+    return html.Div(
+        [
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                "🤖 Agent Imitateur",
+                                style={
+                                    "color": t["accent1"],
+                                    "fontSize": "22px",
+                                    "fontWeight": "700",
+                                    "fontFamily": t["font"],
+                                    "marginBottom": "4px",
+                                },
+                            ),
+                            html.Div(
+                                "Rejoue frame par frame les vrais inputs d'un joueur enregistré",
+                                style={"color": t["subtext"], "fontSize": "13px"},
+                            ),
+                        ]
+                    ),
+                    data_badge(is_real, theme),
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "flex-start",
+                    "marginBottom": "24px",
+                },
+            ),
+            html.Div(
+                [
+                    make_card(
+                        [
+                            html.Div(
+                                "Configuration de l'agent",
+                                style={
+                                    "color": t["subtext"],
+                                    "fontSize": "11px",
+                                    "textTransform": "uppercase",
+                                    "letterSpacing": "2px",
+                                    "marginBottom": "16px",
+                                },
+                            ),
+                            html.Div(
+                                "Jeu à lancer",
+                                style={
+                                    "color": t["subtext"],
+                                    "fontSize": "11px",
+                                    "marginBottom": "6px",
+                                },
+                            ),
+                            dcc.Dropdown(
+                                id="dropdown-agent-game",
+                                options=[
+                                    {"label": "🎯 Reflex", "value": "reflex"},
+                                    {"label": "🌀 Labyrinth", "value": "labyrinth"},
+                                    {"label": "🚀 Shooter", "value": "shooter"},
+                                    {"label": "🏎️ Racing", "value": "racing"},
+                                ],
+                                value="reflex",
+                                clearable=False,
+                                style={
+                                    "background": t["card"],
+                                    "color": "#000",
+                                    "borderRadius": "6px",
+                                    "marginBottom": "16px",
+                                },
+                            ),
+                            html.Div(
+                                "Joueur à imiter",
+                                style={
+                                    "color": t["subtext"],
+                                    "fontSize": "11px",
+                                    "marginBottom": "6px",
+                                },
+                            ),
+                            dcc.Dropdown(
+                                id="dropdown-agent-player",
+                                options=[
+                                    {"label": p, "value": p} for p in mock_players
+                                ],
+                                placeholder="Sélectionner un joueur...",
+                                style={
+                                    "background": t["card"],
+                                    "color": "#000",
+                                    "borderRadius": "6px",
+                                    "marginBottom": "16px",
+                                },
+                            ),
+                            html.Div(
+                                "Fidélité d'imitation",
+                                style={
+                                    "color": t["subtext"],
+                                    "fontSize": "11px",
+                                    "marginBottom": "6px",
+                                },
+                            ),
+                            dcc.Slider(
+                                id="slider-agent-noise",
+                                min=0,
+                                max=100,
+                                step=1,
+                                value=80,
+                                marks={0: "Libre", 50: "Mixte", 100: "Fidèle"},
+                                tooltip={"placement": "bottom"},
+                                className="custom-slider",
+                            ),
+                            html.Div(style={"height": "20px"}),
+                            html.Button(
+                                "▶ LANCER L'AGENT",
+                                id="btn-launch-agent",
+                                n_clicks=0,
+                                style={
+                                    "background": t["gradient"],
+                                    "border": "none",
+                                    "color": "#000",
+                                    "padding": "12px 32px",
+                                    "borderRadius": "6px",
+                                    "cursor": "pointer",
+                                    "fontFamily": t["font"],
+                                    "fontSize": "14px",
+                                    "fontWeight": "700",
+                                    "letterSpacing": "2px",
+                                    "width": "100%",
+                                },
+                            ),
+                            html.Div(style={"height": "8px"}),
+                            html.Button(
+                                "⏹ ARRÊTER",
+                                id="btn-stop-agent",
+                                n_clicks=0,
+                                style={
+                                    "background": "transparent",
+                                    "border": f"1px solid {t['accent3']}",
+                                    "color": t["accent3"],
+                                    "padding": "10px 32px",
+                                    "borderRadius": "6px",
+                                    "cursor": "pointer",
+                                    "fontFamily": t["font"],
+                                    "fontSize": "13px",
+                                    "width": "100%",
+                                },
+                            ),
+                            html.Div(
+                                id="agent-feedback",
+                                style={"marginTop": "12px", "fontSize": "12px"},
+                            ),
+                        ],
+                        theme,
+                        {"flex": "1"},
+                    ),
+                    html.Div(
+                        [
+                            make_card(
+                                [
+                                    html.Div(
+                                        "Comparaison Humain vs Agent IA",
+                                        style={
+                                            "color": t["subtext"],
+                                            "fontSize": "11px",
+                                            "textTransform": "uppercase",
+                                            "letterSpacing": "2px",
+                                            "marginBottom": "12px",
+                                        },
+                                    ),
+                                    dcc.Graph(
+                                        figure=make_agent_comparison(theme),
+                                        config={"displayModeBar": False},
+                                    ),
+                                ],
+                                theme,
+                                {"marginBottom": "16px"},
+                            ),
+                            make_card(
+                                [
+                                    html.Div(
+                                        "Mode Replay",
+                                        style={
+                                            "color": t["subtext"],
+                                            "fontSize": "11px",
+                                            "textTransform": "uppercase",
+                                            "letterSpacing": "2px",
+                                            "marginBottom": "16px",
+                                        },
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.Div(
+                                                "Frame-by-Frame",
+                                                style={
+                                                    "color": t["accent1"],
+                                                    "fontSize": "32px",
+                                                    "fontFamily": t["font"],
+                                                    "fontWeight": "700",
+                                                    "textAlign": "center",
+                                                },
+                                            ),
+                                            html.Div(
+                                                "Rejoue les inputs réels depuis Supabase",
+                                                style={
+                                                    "color": t["subtext"],
+                                                    "fontSize": "13px",
+                                                    "textAlign": "center",
+                                                    "marginTop": "8px",
+                                                },
+                                            ),
+                                            html.Div(
+                                                [
+                                                    html.Div(
+                                                        "Bruit gaussien σ",
+                                                        style={
+                                                            "color": t["subtext"],
+                                                            "fontSize": "11px",
+                                                            "marginBottom": "4px",
+                                                        },
+                                                    ),
+                                                    html.Div(
+                                                        "configurable via le slider Fidélité",
+                                                        style={
+                                                            "color": t["accent2"],
+                                                            "fontSize": "12px",
+                                                            "fontFamily": t[
+                                                                "font_body"
+                                                            ],
+                                                        },
+                                                    ),
+                                                ],
+                                                style={
+                                                    "marginTop": "16px",
+                                                    "padding": "12px",
+                                                    "background": t["bg"],
+                                                    "borderRadius": "6px",
+                                                    "border": f"1px solid {t['border']}",
+                                                },
+                                            ),
+                                        ]
+                                    ),
+                                ],
+                                theme,
+                            ),
+                        ],
+                        style={
+                            "flex": "2",
+                            "display": "flex",
+                            "flexDirection": "column",
+                        },
+                    ),
+                ],
+                style={"display": "flex", "gap": "16px", "flexWrap": "wrap"},
+            ),
+        ]
+    )
 
 
 # ─────────────────────────────────────────────
 # PAGE POST-SESSION
 # ─────────────────────────────────────────────
 
+
 def page_postsession(theme, player_name: str, game_id: str, summary_data=None):
     t = THEMES[theme]
-    game_labels = {"reflex": "🎯 Reflex", "labyrinth": "🌀 Labyrinth",
-                   "shooter": "🚀 Shooter", "racing": "🏎️ Racing"}
+    game_labels = {
+        "reflex": "🎯 Reflex",
+        "labyrinth": "🌀 Labyrinth",
+        "shooter": "🚀 Shooter",
+        "racing": "🏎️ Racing",
+    }
     game_label = game_labels.get(game_id, game_id.upper())
 
     # Chargement stats brutes depuis Supabase
     session_data, all_game_data = None, []
     player_sessions_game = []
     try:
-        from core.supabase_client import fetch_sessions_by_player, fetch_sessions_by_game
+        from core.supabase_client import (
+            fetch_sessions_by_player,
+            fetch_sessions_by_game,
+        )
+
         player_sessions = fetch_sessions_by_player(player_name)
-        all_game_data   = fetch_sessions_by_game(game_id)
-        player_sessions_game = [s for s in player_sessions if s.get("game_id") == game_id]
+        all_game_data = fetch_sessions_by_game(game_id)
+        player_sessions_game = [
+            s for s in player_sessions if s.get("game_id") == game_id
+        ]
         if player_sessions_game:
             session_data = player_sessions_game[-1]  # Dernière session
     except Exception:
@@ -1680,101 +1856,265 @@ def page_postsession(theme, player_name: str, game_id: str, summary_data=None):
     # Calculs classement
     if session_data and all_game_data:
         score = session_data.get("score", 0)
-        scores_sorted  = sorted([s.get("score", 0) for s in all_game_data], reverse=True)
-        rank_global    = next((i+1 for i, s in enumerate(scores_sorted) if s <= score), len(all_game_data))
-        pct_global     = round((1 - rank_global / max(len(all_game_data), 1)) * 100, 1)
-        personal_best  = max(s.get("score", 0) for s in player_sessions_game)
-        global_best    = scores_sorted[0] if scores_sorted else 1
+        scores_sorted = sorted([s.get("score", 0) for s in all_game_data], reverse=True)
+        rank_global = next(
+            (i + 1 for i, s in enumerate(scores_sorted) if s <= score),
+            len(all_game_data),
+        )
+        pct_global = round((1 - rank_global / max(len(all_game_data), 1)) * 100, 1)
+        personal_best = max(s.get("score", 0) for s in player_sessions_game)
+        global_best = scores_sorted[0] if scores_sorted else 1
         bar_global_pct = f"{min(100, round(score / max(global_best, 1) * 100, 1))}%"
-        bar_perso_pct  = f"{min(100, round(score / max(personal_best, 1) * 100, 1))}%"
+        bar_perso_pct = f"{min(100, round(score / max(personal_best, 1) * 100, 1))}%"
     else:
-        score = 0; rank_global = "?"; pct_global = "?"; personal_best = 0
-        bar_global_pct = "0%"; bar_perso_pct = "0%"
+        score = 0
+        rank_global = "?"
+        pct_global = "?"
+        personal_best = 0
+        bar_global_pct = "0%"
+        bar_perso_pct = "0%"
 
     def stat_row(label, value, color=None):
-        return html.Div([
-            html.Span(label, style={"color": t["subtext"], "fontSize": "12px", "flex": "1"}),
-            html.Span(str(value), style={"color": color or t["accent1"], "fontSize": "14px",
-                                          "fontWeight": "700", "fontFamily": t["font"]}),
-        ], style={"display": "flex", "justifyContent": "space-between",
-                  "padding": "8px 0", "borderBottom": f"1px solid {t['border']}"})
+        return html.Div(
+            [
+                html.Span(
+                    label,
+                    style={"color": t["subtext"], "fontSize": "12px", "flex": "1"},
+                ),
+                html.Span(
+                    str(value),
+                    style={
+                        "color": color or t["accent1"],
+                        "fontSize": "14px",
+                        "fontWeight": "700",
+                        "fontFamily": t["font"],
+                    },
+                ),
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-between",
+                "padding": "8px 0",
+                "borderBottom": f"1px solid {t['border']}",
+            },
+        )
 
-    return html.Div([
-        # Header
-        html.Div([
-            html.Div([
-                html.Div(f"Résumé de session — {player_name}",
-                         style={"color": t["accent1"], "fontSize": "22px",
-                                "fontWeight": "700", "fontFamily": t["font"], "marginBottom": "4px"}),
-                html.Div(f"{game_label} · Analyse IA en cours...",
-                         style={"color": t["subtext"], "fontSize": "13px"}),
-            ]),
-        ], style={"marginBottom": "24px"}),
-
-        html.Div([
-            # Colonne gauche : stats brutes + classement
-            html.Div([
-                make_card([
-                    html.Div("Performances de la session", style={
-                        "color": t["subtext"], "fontSize": "11px",
-                        "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "12px"
-                    }),
-                    stat_row("Score", session_data.get("score", "—") if session_data else "—"),
-                    stat_row("Durée", f"{session_data.get('duration_sec', 0):.0f}s" if session_data else "—"),
-                    stat_row("Pression boutons", f"{session_data.get('btn_press_rate', 0):.3f}/s" if session_data else "—"),
-                    stat_row("Agitation joystick lx", f"{session_data.get('lx_std', 0):.3f}" if session_data else "—"),
-                    stat_row("Régularité", f"{session_data.get('input_regularity', 0):.2f}" if session_data else "—"),
-                ], theme, {"marginBottom": "16px"}),
-
-                make_card([
-                    html.Div("Classements", style={
-                        "color": t["subtext"], "fontSize": "11px",
-                        "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"
-                    }),
-                    html.Div(f"Rang global : {rank_global}/{len(all_game_data)} — {pct_global}% battus",
-                             style={"color": t["text"], "fontSize": "13px", "marginBottom": "8px"}),
-                    html.Div(html.Div(style={
-                        "width": bar_global_pct, "height": "8px",
-                        "background": t["gradient"], "borderRadius": "4px",
-                    }), style={"background": t["border"], "borderRadius": "4px", "marginBottom": "16px"}),
-
-                    html.Div(f"Meilleur perso : {personal_best}",
-                             style={"color": t["text"], "fontSize": "13px", "marginBottom": "8px"}),
-                    html.Div(html.Div(style={
-                        "width": bar_perso_pct, "height": "8px",
-                        "background": t["accent2"], "borderRadius": "4px",
-                    }), style={"background": t["border"], "borderRadius": "4px"}),
-                ], theme),
-            ], style={"flex": "1"}),
-
-            # Colonne droite : résumé LLM (polling)
-            html.Div([
-                make_card([
-                    html.Div("Analyse IA", style={
-                        "color": t["subtext"], "fontSize": "11px",
-                        "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"
-                    }),
-                    _render_summary_card(summary_data, t, compact=False) if summary_data else html.Div([
-                        html.Div("Génération du résumé IA en cours...",
-                                 style={"color": t["subtext"], "fontSize": "13px",
-                                        "textAlign": "center", "marginBottom": "12px"}),
-                        html.Div(style={
-                            "width": "40px", "height": "40px", "margin": "0 auto",
-                            "border": f"3px solid {t['border']}",
-                            "borderTop": f"3px solid {t['accent1']}",
-                            "borderRadius": "50%",
-                            "animation": "spin 1s linear infinite",
-                        }),
-                    ], style={"padding": "32px", "textAlign": "center"}),
-                ], theme),
-            ], style={"flex": "2"}),
-        ], style={"display": "flex", "gap": "16px", "flexWrap": "wrap"}),
-    ])
+    return html.Div(
+        [
+            # Header
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                f"Résumé de session — {player_name}",
+                                style={
+                                    "color": t["accent1"],
+                                    "fontSize": "22px",
+                                    "fontWeight": "700",
+                                    "fontFamily": t["font"],
+                                    "marginBottom": "4px",
+                                },
+                            ),
+                            html.Div(
+                                f"{game_label} · Analyse IA en cours...",
+                                style={"color": t["subtext"], "fontSize": "13px"},
+                            ),
+                        ]
+                    ),
+                ],
+                style={"marginBottom": "24px"},
+            ),
+            html.Div(
+                [
+                    # Colonne gauche : stats brutes + classement
+                    html.Div(
+                        [
+                            make_card(
+                                [
+                                    html.Div(
+                                        "Performances de la session",
+                                        style={
+                                            "color": t["subtext"],
+                                            "fontSize": "11px",
+                                            "textTransform": "uppercase",
+                                            "letterSpacing": "2px",
+                                            "marginBottom": "12px",
+                                        },
+                                    ),
+                                    stat_row(
+                                        "Score",
+                                        (
+                                            session_data.get("score", "—")
+                                            if session_data
+                                            else "—"
+                                        ),
+                                    ),
+                                    stat_row(
+                                        "Durée",
+                                        (
+                                            f"{session_data.get('duration_sec', 0):.0f}s"
+                                            if session_data
+                                            else "—"
+                                        ),
+                                    ),
+                                    stat_row(
+                                        "Pression boutons",
+                                        (
+                                            f"{session_data.get('btn_press_rate', 0):.3f}/s"
+                                            if session_data
+                                            else "—"
+                                        ),
+                                    ),
+                                    stat_row(
+                                        "Agitation joystick lx",
+                                        (
+                                            f"{session_data.get('lx_std', 0):.3f}"
+                                            if session_data
+                                            else "—"
+                                        ),
+                                    ),
+                                    stat_row(
+                                        "Régularité",
+                                        (
+                                            f"{session_data.get('input_regularity', 0):.2f}"
+                                            if session_data
+                                            else "—"
+                                        ),
+                                    ),
+                                ],
+                                theme,
+                                {"marginBottom": "16px"},
+                            ),
+                            make_card(
+                                [
+                                    html.Div(
+                                        "Classements",
+                                        style={
+                                            "color": t["subtext"],
+                                            "fontSize": "11px",
+                                            "textTransform": "uppercase",
+                                            "letterSpacing": "2px",
+                                            "marginBottom": "16px",
+                                        },
+                                    ),
+                                    html.Div(
+                                        f"Rang global : {rank_global}/{len(all_game_data)} — {pct_global}% battus",
+                                        style={
+                                            "color": t["text"],
+                                            "fontSize": "13px",
+                                            "marginBottom": "8px",
+                                        },
+                                    ),
+                                    html.Div(
+                                        html.Div(
+                                            style={
+                                                "width": bar_global_pct,
+                                                "height": "8px",
+                                                "background": t["gradient"],
+                                                "borderRadius": "4px",
+                                            }
+                                        ),
+                                        style={
+                                            "background": t["border"],
+                                            "borderRadius": "4px",
+                                            "marginBottom": "16px",
+                                        },
+                                    ),
+                                    html.Div(
+                                        f"Meilleur perso : {personal_best}",
+                                        style={
+                                            "color": t["text"],
+                                            "fontSize": "13px",
+                                            "marginBottom": "8px",
+                                        },
+                                    ),
+                                    html.Div(
+                                        html.Div(
+                                            style={
+                                                "width": bar_perso_pct,
+                                                "height": "8px",
+                                                "background": t["accent2"],
+                                                "borderRadius": "4px",
+                                            }
+                                        ),
+                                        style={
+                                            "background": t["border"],
+                                            "borderRadius": "4px",
+                                        },
+                                    ),
+                                ],
+                                theme,
+                            ),
+                        ],
+                        style={"flex": "1"},
+                    ),
+                    # Colonne droite : résumé LLM (polling)
+                    html.Div(
+                        [
+                            make_card(
+                                [
+                                    html.Div(
+                                        "Analyse IA",
+                                        style={
+                                            "color": t["subtext"],
+                                            "fontSize": "11px",
+                                            "textTransform": "uppercase",
+                                            "letterSpacing": "2px",
+                                            "marginBottom": "16px",
+                                        },
+                                    ),
+                                    (
+                                        _render_summary_card(
+                                            summary_data, t, compact=False
+                                        )
+                                        if summary_data
+                                        else html.Div(
+                                            [
+                                                html.Div(
+                                                    "Génération du résumé IA en cours...",
+                                                    style={
+                                                        "color": t["subtext"],
+                                                        "fontSize": "13px",
+                                                        "textAlign": "center",
+                                                        "marginBottom": "12px",
+                                                    },
+                                                ),
+                                                html.Div(
+                                                    style={
+                                                        "width": "40px",
+                                                        "height": "40px",
+                                                        "margin": "0 auto",
+                                                        "border": f"3px solid {t['border']}",
+                                                        "borderTop": f"3px solid {t['accent1']}",
+                                                        "borderRadius": "50%",
+                                                        "animation": "spin 1s linear infinite",
+                                                    }
+                                                ),
+                                            ],
+                                            style={
+                                                "padding": "32px",
+                                                "textAlign": "center",
+                                            },
+                                        )
+                                    ),
+                                ],
+                                theme,
+                            ),
+                        ],
+                        style={"flex": "2"},
+                    ),
+                ],
+                style={"display": "flex", "gap": "16px", "flexWrap": "wrap"},
+            ),
+        ]
+    )
 
 
 # ─────────────────────────────────────────────
 # PAGE CHATBOT
 # ─────────────────────────────────────────────
+
 
 def page_chat(theme):
     t = THEMES[theme]
@@ -1786,138 +2126,328 @@ def page_chat(theme):
         "Donne-moi des conseils pour progresser",
     ]
 
-    return html.Div([
-        # Header
-        html.Div([
-            html.Div("💬 Chat IA Gaming", style={
-                "color": t["accent1"], "fontSize": "22px",
-                "fontWeight": "700", "fontFamily": t["font"], "marginBottom": "4px"
-            }),
-            html.Div("Pose tes questions sur tes performances, classements et conseils",
-                     style={"color": t["subtext"], "fontSize": "13px"}),
-        ], style={"marginBottom": "24px"}),
-
-        # Zone de chat
-        make_card([
-            # Messages scrollables
+    return html.Div(
+        [
+            # Header
             html.Div(
-                id="chat-messages-container",
-                children=[
-                    html.Div([
-                        html.Span("🤖", style={"fontSize": "18px", "marginRight": "10px"}),
-                        html.Span("Bonjour ! Je suis ton coach IA. Pose-moi une question sur tes performances.",
-                                  style={"color": t["text"], "fontSize": "13px"}),
-                    ], style={
-                        "background": t["bg"], "borderRadius": "8px", "padding": "12px 16px",
-                        "marginBottom": "8px", "borderLeft": f"3px solid {t['accent1']}",
-                    }),
+                [
+                    html.Div(
+                        "💬 Chat IA Gaming",
+                        style={
+                            "color": t["accent1"],
+                            "fontSize": "22px",
+                            "fontWeight": "700",
+                            "fontFamily": t["font"],
+                            "marginBottom": "4px",
+                        },
+                    ),
+                    html.Div(
+                        "Pose tes questions sur tes performances, classements et conseils",
+                        style={"color": t["subtext"], "fontSize": "13px"},
+                    ),
                 ],
-                style={"minHeight": "350px", "maxHeight": "420px", "overflowY": "auto",
-                       "marginBottom": "16px", "padding": "4px"},
+                style={"marginBottom": "24px"},
             ),
-
-            # Suggestions rapides
-            html.Div([
-                html.Button(s, id={"type": "chat-suggestion", "index": i}, n_clicks=0, style={
-                    "background": "transparent", "border": f"1px solid {t['border']}",
-                    "color": t["subtext"], "borderRadius": "16px", "padding": "4px 12px",
-                    "fontSize": "11px", "cursor": "pointer", "marginRight": "6px",
-                    "fontFamily": t["font_body"],
-                }) for i, s in enumerate(suggestions)
-            ], style={"marginBottom": "12px", "flexWrap": "wrap", "display": "flex", "gap": "4px"}),
-
-            # Input + bouton
-            html.Div([
-                dcc.Input(
-                    id="chat-input",
-                    type="text",
-                    placeholder="Pose ta question...",
-                    debounce=False,
-                    n_submit=0,
-                    style={
-                        "flex": "1", "background": t["bg"],
-                        "border": f"1px solid {t['border']}", "borderRadius": "6px",
-                        "color": t["text"], "padding": "10px 14px", "fontSize": "13px",
-                        "fontFamily": t["font_body"], "outline": "none",
-                    },
-                ),
-                html.Button("▶ Envoyer", id="btn-chat-send", n_clicks=0, style={
-                    "background": t["gradient"], "border": "none", "color": "#000",
-                    "padding": "10px 24px", "borderRadius": "6px", "cursor": "pointer",
-                    "fontFamily": t["font"], "fontSize": "13px", "fontWeight": "700",
-                    "marginLeft": "8px", "whiteSpace": "nowrap",
-                }),
-            ], style={"display": "flex", "alignItems": "center"}),
-
-            html.Div(id="chat-loading", style={"color": t["subtext"], "fontSize": "11px",
-                                                "marginTop": "8px", "minHeight": "16px"}),
-        ], theme),
-    ])
+            # Zone de chat
+            make_card(
+                [
+                    # Messages scrollables
+                    html.Div(
+                        id="chat-messages-container",
+                        children=[
+                            html.Div(
+                                [
+                                    html.Span(
+                                        "🤖",
+                                        style={
+                                            "fontSize": "18px",
+                                            "marginRight": "10px",
+                                        },
+                                    ),
+                                    html.Span(
+                                        "Bonjour ! Je suis ton coach IA. Pose-moi une question sur tes performances.",
+                                        style={"color": t["text"], "fontSize": "13px"},
+                                    ),
+                                ],
+                                style={
+                                    "background": t["bg"],
+                                    "borderRadius": "8px",
+                                    "padding": "12px 16px",
+                                    "marginBottom": "8px",
+                                    "borderLeft": f"3px solid {t['accent1']}",
+                                },
+                            ),
+                        ],
+                        style={
+                            "minHeight": "350px",
+                            "maxHeight": "420px",
+                            "overflowY": "auto",
+                            "marginBottom": "16px",
+                            "padding": "4px",
+                        },
+                    ),
+                    # Suggestions rapides
+                    html.Div(
+                        [
+                            html.Button(
+                                s,
+                                id={"type": "chat-suggestion", "index": i},
+                                n_clicks=0,
+                                style={
+                                    "background": "transparent",
+                                    "border": f"1px solid {t['border']}",
+                                    "color": t["subtext"],
+                                    "borderRadius": "16px",
+                                    "padding": "4px 12px",
+                                    "fontSize": "11px",
+                                    "cursor": "pointer",
+                                    "marginRight": "6px",
+                                    "fontFamily": t["font_body"],
+                                },
+                            )
+                            for i, s in enumerate(suggestions)
+                        ],
+                        style={
+                            "marginBottom": "12px",
+                            "flexWrap": "wrap",
+                            "display": "flex",
+                            "gap": "4px",
+                        },
+                    ),
+                    # Input + bouton
+                    html.Div(
+                        [
+                            dcc.Input(
+                                id="chat-input",
+                                type="text",
+                                placeholder="Pose ta question...",
+                                debounce=False,
+                                n_submit=0,
+                                style={
+                                    "flex": "1",
+                                    "background": t["bg"],
+                                    "border": f"1px solid {t['border']}",
+                                    "borderRadius": "6px",
+                                    "color": t["text"],
+                                    "padding": "10px 14px",
+                                    "fontSize": "13px",
+                                    "fontFamily": t["font_body"],
+                                    "outline": "none",
+                                },
+                            ),
+                            html.Button(
+                                "▶ Envoyer",
+                                id="btn-chat-send",
+                                n_clicks=0,
+                                style={
+                                    "background": t["gradient"],
+                                    "border": "none",
+                                    "color": "#000",
+                                    "padding": "10px 24px",
+                                    "borderRadius": "6px",
+                                    "cursor": "pointer",
+                                    "fontFamily": t["font"],
+                                    "fontSize": "13px",
+                                    "fontWeight": "700",
+                                    "marginLeft": "8px",
+                                    "whiteSpace": "nowrap",
+                                },
+                            ),
+                        ],
+                        style={"display": "flex", "alignItems": "center"},
+                    ),
+                    html.Div(
+                        id="chat-loading",
+                        style={
+                            "color": t["subtext"],
+                            "fontSize": "11px",
+                            "marginTop": "8px",
+                            "minHeight": "16px",
+                        },
+                    ),
+                ],
+                theme,
+            ),
+        ]
+    )
 
 
 # ─────────────────────────────────────────────
 # LAYOUT
 # ─────────────────────────────────────────────
-app.layout = html.Div([
-    dcc.Store(id="theme-store",    data="cyberpunk"),
-    dcc.Store(id="page-store",     data="game"),
-    dcc.Store(id="sessions-store", data=[]),
-    dcc.Store(id="stats-store",    data={}),
-    dcc.Store(id="summary-store",  data=[]),
-    dcc.Store(id="agent-pid-store",    data=None),
-    dcc.Store(id="url-params-store",        data={}),
-    dcc.Store(id="chat-store",              data=[]),
-    dcc.Store(id="postsession-summary-data",data=None),
-    dcc.Location(id="url", refresh=False),
-    dcc.Interval(id="refresh-interval",          interval=5000,  n_intervals=0),
-    dcc.Interval(id="summary-refresh-interval",  interval=8000,  n_intervals=0),
-    dcc.Interval(id="postsession-interval",      interval=2000,  n_intervals=0, disabled=True),
-
-    html.Link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@400;700&family=IBM+Plex+Mono&family=VT323&family=Courier+Prime&family=Syne:wght@400;700;800&family=Space+Mono&display=swap"),
-
-    html.Div(id="main-container", children=[
-        # ── SIDEBAR ──
-        html.Div(id="sidebar", children=[
-            html.Div([
-                html.Img(
-                    src="/assets/logo_sise_gaming.png",
-                    style={"width": "100%", "maxWidth": "270px", "objectFit": "contain",
-                           "display": "block", "margin": "0 auto 28px auto",
-                           "filter": "drop-shadow(0 0 14px rgba(199,36,177,0.7))",
-                           "borderRadius": "12px"}
+app.layout = html.Div(
+    [
+        dcc.Store(id="theme-store", data="cyberpunk"),
+        dcc.Store(id="page-store", data="game"),
+        dcc.Store(id="sessions-store", data=[]),
+        dcc.Store(id="stats-store", data={}),
+        dcc.Store(id="summary-store", data=[]),
+        dcc.Store(id="agent-pid-store", data=None),
+        dcc.Store(id="url-params-store", data={}),
+        dcc.Store(id="chat-store", data=[]),
+        dcc.Store(id="postsession-summary-data", data=None),
+        dcc.Location(id="url", refresh=False),
+        dcc.Interval(id="refresh-interval", interval=5000, n_intervals=0),
+        dcc.Interval(id="summary-refresh-interval", interval=8000, n_intervals=0),
+        dcc.Interval(
+            id="postsession-interval", interval=2000, n_intervals=0, disabled=True
+        ),
+        html.Link(
+            rel="stylesheet",
+            href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@400;700&family=IBM+Plex+Mono&family=VT323&family=Courier+Prime&family=Syne:wght@400;700;800&family=Space+Mono&display=swap",
+        ),
+        html.Div(
+            id="main-container",
+            children=[
+                # ── SIDEBAR ──
+                html.Div(
+                    id="sidebar",
+                    children=[
+                        html.Div(
+                            [
+                                html.Img(
+                                    src="/assets/logo_sise_gaming.png",
+                                    style={
+                                        "width": "100%",
+                                        "maxWidth": "270px",
+                                        "objectFit": "contain",
+                                        "display": "block",
+                                        "margin": "0 auto 28px auto",
+                                        "filter": "drop-shadow(0 0 14px rgba(199,36,177,0.7))",
+                                        "borderRadius": "12px",
+                                    },
+                                ),
+                            ]
+                        ),
+                        html.Div(
+                            "NAVIGATION",
+                            style={
+                                "fontSize": "9px",
+                                "letterSpacing": "3px",
+                                "opacity": "0.4",
+                                "marginBottom": "12px",
+                                "padding": "0 4px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Button(
+                                    [
+                                        html.Span("🎮", style={"marginRight": "10px"}),
+                                        "Live Game",
+                                    ],
+                                    id="nav-game",
+                                    n_clicks=0,
+                                    className="nav-btn",
+                                ),
+                                html.Button(
+                                    [
+                                        html.Span("🧬", style={"marginRight": "10px"}),
+                                        "Profils",
+                                    ],
+                                    id="nav-profils",
+                                    n_clicks=0,
+                                    className="nav-btn",
+                                ),
+                                html.Button(
+                                    [
+                                        html.Span("🎯", style={"marginRight": "10px"}),
+                                        "Classifier",
+                                    ],
+                                    id="nav-classifier",
+                                    n_clicks=0,
+                                    className="nav-btn",
+                                ),
+                                html.Button(
+                                    [
+                                        html.Span("🤖", style={"marginRight": "10px"}),
+                                        "Agent IA",
+                                    ],
+                                    id="nav-agent",
+                                    n_clicks=0,
+                                    className="nav-btn",
+                                ),
+                                html.Button(
+                                    [
+                                        html.Span("📋", style={"marginRight": "10px"}),
+                                        "Résumés",
+                                    ],
+                                    id="nav-summary",
+                                    n_clicks=0,
+                                    className="nav-btn",
+                                ),
+                                html.Button(
+                                    [
+                                        html.Span("💬", style={"marginRight": "10px"}),
+                                        "Chat IA",
+                                    ],
+                                    id="nav-chat",
+                                    n_clicks=0,
+                                    className="nav-btn",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "4px",
+                                "marginBottom": "32px",
+                            },
+                        ),
+                        html.Div(
+                            "THÈME",
+                            style={
+                                "fontSize": "9px",
+                                "letterSpacing": "3px",
+                                "opacity": "0.4",
+                                "marginBottom": "12px",
+                                "padding": "0 4px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Button(
+                                    THEMES[th]["name"],
+                                    id=f"theme-{th}",
+                                    n_clicks=0,
+                                    className="theme-btn",
+                                    **{"data-theme": th},
+                                )
+                                for th in THEMES
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "4px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Div(
+                                    "Master SISE 2025–2026",
+                                    style={"fontSize": "10px", "opacity": "0.4"},
+                                ),
+                                html.Div(
+                                    "Projet IA Temps réel",
+                                    style={"fontSize": "10px", "opacity": "0.4"},
+                                ),
+                            ],
+                            style={
+                                "position": "absolute",
+                                "bottom": "24px",
+                                "left": "24px",
+                            },
+                        ),
+                    ],
                 ),
-            ]),
-            html.Div("NAVIGATION", style={"fontSize": "9px", "letterSpacing": "3px",
-                                           "opacity": "0.4", "marginBottom": "12px", "padding": "0 4px"}),
-            html.Div([
-                html.Button([html.Span("🎮", style={"marginRight": "10px"}), "Live Game"],
-                            id="nav-game",       n_clicks=0, className="nav-btn"),
-                html.Button([html.Span("🧬", style={"marginRight": "10px"}), "Profils"],
-                            id="nav-profils",    n_clicks=0, className="nav-btn"),
-                html.Button([html.Span("🎯", style={"marginRight": "10px"}), "Classifier"],
-                            id="nav-classifier", n_clicks=0, className="nav-btn"),
-                html.Button([html.Span("🤖", style={"marginRight": "10px"}), "Agent IA"],
-                            id="nav-agent",      n_clicks=0, className="nav-btn"),
-                html.Button([html.Span("📋", style={"marginRight": "10px"}), "Résumés"],
-                            id="nav-summary",    n_clicks=0, className="nav-btn"),
-                html.Button([html.Span("💬", style={"marginRight": "10px"}), "Chat IA"],
-                            id="nav-chat",       n_clicks=0, className="nav-btn"),
-            ], style={"display": "flex", "flexDirection": "column", "gap": "4px", "marginBottom": "32px"}),
-            html.Div("THÈME", style={"fontSize": "9px", "letterSpacing": "3px",
-                                      "opacity": "0.4", "marginBottom": "12px", "padding": "0 4px"}),
-            html.Div([
-                html.Button(THEMES[th]["name"], id=f"theme-{th}", n_clicks=0,
-                            className="theme-btn", **{"data-theme": th})
-                for th in THEMES
-            ], style={"display": "flex", "flexDirection": "column", "gap": "4px"}),
-            html.Div([
-                html.Div("Master SISE 2025–2026", style={"fontSize": "10px", "opacity": "0.4"}),
-                html.Div("Projet IA Temps réel",  style={"fontSize": "10px", "opacity": "0.4"}),
-            ], style={"position": "absolute", "bottom": "24px", "left": "24px"}),
-        ]),
-        html.Div(id="page-content", style={"flex": "1", "padding": "32px", "overflowY": "auto"}),
-    ]),
-], id="root")
+                html.Div(
+                    id="page-content",
+                    style={"flex": "1", "padding": "32px", "overflowY": "auto"},
+                ),
+            ],
+        ),
+    ],
+    id="root",
+)
 
 
 # ─────────────────────────────────────────────
@@ -1958,9 +2488,14 @@ def update_theme(*args):
 
 @app.callback(
     Output("page-store", "data"),
-    [Input("nav-game","n_clicks"),    Input("nav-profils","n_clicks"),
-     Input("nav-classifier","n_clicks"), Input("nav-agent","n_clicks"),
-     Input("nav-summary","n_clicks"), Input("nav-chat","n_clicks")],
+    [
+        Input("nav-game", "n_clicks"),
+        Input("nav-profils", "n_clicks"),
+        Input("nav-classifier", "n_clicks"),
+        Input("nav-agent", "n_clicks"),
+        Input("nav-summary", "n_clicks"),
+        Input("nav-chat", "n_clicks"),
+    ],
     prevent_initial_call=True,
 )
 def update_page(g, p, c, a, s, ch):
@@ -1968,39 +2503,61 @@ def update_page(g, p, c, a, s, ch):
     if not ctx.triggered:
         return "game"
     btn = ctx.triggered[0]["prop_id"].split(".")[0]
-    return {"nav-game":"game","nav-profils":"profils",
-            "nav-classifier":"classifier","nav-agent":"agent",
-            "nav-summary":"summary","nav-chat":"chat"}.get(btn, "game")
+    return {
+        "nav-game": "game",
+        "nav-profils": "profils",
+        "nav-classifier": "classifier",
+        "nav-agent": "agent",
+        "nav-summary": "summary",
+        "nav-chat": "chat",
+    }.get(btn, "game")
 
 
 @app.callback(
     Output("main-container", "style"),
-    Output("sidebar",        "style"),
-    Output("page-content",   "children"),
-    Input("theme-store",              "data"),
-    Input("page-store",               "data"),
+    Output("sidebar", "style"),
+    Output("page-content", "children"),
+    Input("theme-store", "data"),
+    Input("page-store", "data"),
     Input("postsession-summary-data", "data"),
-    dash.dependencies.State("sessions-store",   "data"),
+    dash.dependencies.State("sessions-store", "data"),
     dash.dependencies.State("url-params-store", "data"),
 )
 def render_all(theme, page, summary_data, sessions_data, url_params):
-    t       = THEMES[theme]
-    df_real = pd.DataFrame(sessions_data) if sessions_data and len(sessions_data) >= 3 else None
-    params  = url_params or {}
+    t = THEMES[theme]
+    df_real = (
+        pd.DataFrame(sessions_data)
+        if sessions_data and len(sessions_data) >= 3
+        else None
+    )
+    params = url_params or {}
 
-    container_style = {"display": "flex", "minHeight": "100vh",
-                       "background": t["bg"], "color": t["text"], "fontFamily": t["font_body"]}
-    sidebar_style   = {"width": "220px", "minHeight": "100vh",
-                       "background": t["sidebar"], "borderRight": f"1px solid {t['border']}",
-                       "padding": "24px", "position": "relative", "fontFamily": t["font_body"]}
+    container_style = {
+        "display": "flex",
+        "minHeight": "100vh",
+        "background": t["bg"],
+        "color": t["text"],
+        "fontFamily": t["font_body"],
+    }
+    sidebar_style = {
+        "width": "220px",
+        "minHeight": "100vh",
+        "background": t["sidebar"],
+        "borderRight": f"1px solid {t['border']}",
+        "padding": "24px",
+        "position": "relative",
+        "fontFamily": t["font_body"],
+    }
     pages = {
-        "game":        page_game(theme, df_real),
-        "profils":     page_profils(theme, df_real),
-        "classifier":  page_classifier(theme, df_real),
-        "agent":       page_agent(theme, df_real),
-        "summary":     page_summary(theme),
-        "chat":        page_chat(theme),
-        "postsession": page_postsession(theme, params.get("player", ""), params.get("game", ""), summary_data),
+        "game": page_game(theme, df_real),
+        "profils": page_profils(theme, df_real),
+        "classifier": page_classifier(theme, df_real),
+        "agent": page_agent(theme, df_real),
+        "summary": page_summary(theme),
+        "chat": page_chat(theme),
+        "postsession": page_postsession(
+            theme, params.get("player", ""), params.get("game", ""), summary_data
+        ),
     }
     return container_style, sidebar_style, pages.get(page, page_game(theme, df_real))
 
@@ -2028,35 +2585,6 @@ def update_stats(stats, theme):
         stat_card("Réaction moy.", "— ms", "Temps de réponse", theme).children,
         data_badge(is_real, theme),
     )
-
-
-# @app.callback(
-#     Output("live-inputs-table",  "children"),
-#     Output("live-source-badge",  "children"),
-#     Input("refresh-interval", "n_intervals"),
-#     dash.dependencies.State("theme-store", "data"),
-# )
-# def update_live_inputs(n, theme):
-#     t = THEMES[theme]
-#     rows = []
-#     try:
-#         from core.supabase_client import fetch_live_inputs
-#         rows = fetch_live_inputs(limit=10)
-#     except Exception:
-#         pass
-
-#     # Badge source
-#     source = rows[-1].get("event_type", "none") if rows else "none"
-#     badge_map = {
-#         "controller": ("🎮 Manette", t["accent2"]),
-#         "keyboard":   ("⌨️  Clavier", t["accent3"]),
-#     }
-#     label, color = badge_map.get(source, ("⏳ En attente…", t["subtext"]))
-#     badge = html.Div(label, style={"color": color, "fontSize": "10px", "letterSpacing": "1px",
-#                                     "border": f"1px solid {color}", "borderRadius": "4px",
-#                                     "padding": "2px 8px"})
-
-#     return make_inputs_table(theme, rows), badge
 
 
 @app.callback(
@@ -2247,48 +2775,79 @@ def update_live_inputs(n, theme):
         style={"display": "flex", "gap": "8px"},
     )
 
-    return table, fig, gauge_lt, gauge_rt, buttons_display, badge   
-
-
+    return table, fig, gauge_lt, gauge_rt, buttons_display, badge
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE RÉSUMÉS LLM
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def page_summary(theme):
     t = THEMES[theme]
-    return html.Div([
-        # Titre
-        html.Div([
-            html.Div([
-                html.Div("📋 Résumés de sessions", style={
-                    "color": t["accent1"], "fontSize": "22px",
-                    "fontWeight": "700", "fontFamily": t["font"], "marginBottom": "4px"
-                }),
-                html.Div("Analyse IA personnalisée après chaque partie",
-                         style={"color": t["subtext"], "fontSize": "13px"}),
-            ]),
-        ], style={"marginBottom": "24px"}),
-
-        # Résumé le plus récent en avant
-        make_card([
-            html.Div("Dernière session analysée", style={
-                "color": t["subtext"], "fontSize": "11px",
-                "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"
-            }),
-            html.Div(id="summary-latest"),
-        ], theme, {"marginBottom": "16px"}),
-
-        # Historique
-        make_card([
-            html.Div("Historique des résumés", style={
-                "color": t["subtext"], "fontSize": "11px",
-                "textTransform": "uppercase", "letterSpacing": "2px", "marginBottom": "16px"
-            }),
-            html.Div(id="summary-history"),
-        ], theme),
-    ])
+    return html.Div(
+        [
+            # Titre
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                "📋 Résumés de sessions",
+                                style={
+                                    "color": t["accent1"],
+                                    "fontSize": "22px",
+                                    "fontWeight": "700",
+                                    "fontFamily": t["font"],
+                                    "marginBottom": "4px",
+                                },
+                            ),
+                            html.Div(
+                                "Analyse IA personnalisée après chaque partie",
+                                style={"color": t["subtext"], "fontSize": "13px"},
+                            ),
+                        ]
+                    ),
+                ],
+                style={"marginBottom": "24px"},
+            ),
+            # Résumé le plus récent en avant
+            make_card(
+                [
+                    html.Div(
+                        "Dernière session analysée",
+                        style={
+                            "color": t["subtext"],
+                            "fontSize": "11px",
+                            "textTransform": "uppercase",
+                            "letterSpacing": "2px",
+                            "marginBottom": "16px",
+                        },
+                    ),
+                    html.Div(id="summary-latest"),
+                ],
+                theme,
+                {"marginBottom": "16px"},
+            ),
+            # Historique
+            make_card(
+                [
+                    html.Div(
+                        "Historique des résumés",
+                        style={
+                            "color": t["subtext"],
+                            "fontSize": "11px",
+                            "textTransform": "uppercase",
+                            "letterSpacing": "2px",
+                            "marginBottom": "16px",
+                        },
+                    ),
+                    html.Div(id="summary-history"),
+                ],
+                theme,
+            ),
+        ]
+    )
 
 
 def _render_summary_card(s: dict, t: dict, compact: bool = False) -> html.Div:
@@ -2297,169 +2856,474 @@ def _render_summary_card(s: dict, t: dict, compact: bool = False) -> html.Div:
     if not summary:
         return html.Div()
 
-    emoji         = summary.get("emoji_humeur", "🎮")
-    titre         = summary.get("titre", "Session")
-    resume        = summary.get("resume", "")
+    emoji = summary.get("emoji_humeur", "🎮")
+    titre = summary.get("titre", "Session")
+    resume = summary.get("resume", "")
     analyse_style = summary.get("analyse_style", "")
     profil_joueur = summary.get("profil_joueur", "")
-    conseil       = summary.get("conseil", "")
-    objectif      = summary.get("objectif", "")
-    cl_glob       = summary.get("classement_global", "")
-    cl_perso      = summary.get("classement_personnel", "")
-    pf            = summary.get("points_forts", [])
-    axes          = summary.get("axes_amelioration", [])
-    is_mock       = summary.get("mock", False)
+    conseil = summary.get("conseil", "")
+    objectif = summary.get("objectif", "")
+    cl_glob = summary.get("classement_global", "")
+    cl_perso = summary.get("classement_personnel", "")
+    pf = summary.get("points_forts", [])
+    axes = summary.get("axes_amelioration", [])
+    is_mock = summary.get("mock", False)
 
     game_colors = {
-        "reflex": t["accent1"], "labyrinth": t["accent2"],
-        "shooter": t["accent3"], "racing": "#FFB800",
+        "reflex": t["accent1"],
+        "labyrinth": t["accent2"],
+        "shooter": t["accent3"],
+        "racing": "#FFB800",
     }
     game_col = game_colors.get(s.get("game_id", ""), t["subtext"])
 
     if compact:
-        return html.Div([
-            html.Div([
-                html.Span(emoji, style={"fontSize": "18px", "marginRight": "8px"}),
-                html.Span(titre, style={"color": t["text"], "fontWeight": "700",
-                                        "fontFamily": t["font"], "fontSize": "13px"}),
-                html.Span(f" · {s.get('player_name','')}",
-                          style={"color": t["subtext"], "fontSize": "11px"}),
-                html.Span(f" · {s.get('game_id','').upper()}",
-                          style={"color": game_col, "fontSize": "11px", "marginLeft": "4px"}),
-                html.Span(f" · {s.get('score', 0)} pts",
-                          style={"color": t["accent2"], "fontSize": "11px", "marginLeft": "4px"}),
-                *([html.Span(f" · {profil_joueur}",
-                             style={"color": t["accent1"], "fontSize": "10px",
-                                    "marginLeft": "4px", "fontStyle": "italic"})] if profil_joueur else []),
-            ], style={"marginBottom": "4px"}),
-            html.Div(resume, style={"color": t["subtext"], "fontSize": "12px",
-                                     "borderLeft": f"2px solid {t['border']}",
-                                     "paddingLeft": "8px", "marginBottom": "8px",
-                                     "lineHeight": "1.5"}),
-        ], style={"marginBottom": "12px", "paddingBottom": "12px",
-                  "borderBottom": f"1px solid {t['border']}"})
+        return html.Div(
+            [
+                html.Div(
+                    [
+                        html.Span(
+                            emoji, style={"fontSize": "18px", "marginRight": "8px"}
+                        ),
+                        html.Span(
+                            titre,
+                            style={
+                                "color": t["text"],
+                                "fontWeight": "700",
+                                "fontFamily": t["font"],
+                                "fontSize": "13px",
+                            },
+                        ),
+                        html.Span(
+                            f" · {s.get('player_name','')}",
+                            style={"color": t["subtext"], "fontSize": "11px"},
+                        ),
+                        html.Span(
+                            f" · {s.get('game_id','').upper()}",
+                            style={
+                                "color": game_col,
+                                "fontSize": "11px",
+                                "marginLeft": "4px",
+                            },
+                        ),
+                        html.Span(
+                            f" · {s.get('score', 0)} pts",
+                            style={
+                                "color": t["accent2"],
+                                "fontSize": "11px",
+                                "marginLeft": "4px",
+                            },
+                        ),
+                        *(
+                            [
+                                html.Span(
+                                    f" · {profil_joueur}",
+                                    style={
+                                        "color": t["accent1"],
+                                        "fontSize": "10px",
+                                        "marginLeft": "4px",
+                                        "fontStyle": "italic",
+                                    },
+                                )
+                            ]
+                            if profil_joueur
+                            else []
+                        ),
+                    ],
+                    style={"marginBottom": "4px"},
+                ),
+                html.Div(
+                    resume,
+                    style={
+                        "color": t["subtext"],
+                        "fontSize": "12px",
+                        "borderLeft": f"2px solid {t['border']}",
+                        "paddingLeft": "8px",
+                        "marginBottom": "8px",
+                        "lineHeight": "1.5",
+                    },
+                ),
+            ],
+            style={
+                "marginBottom": "12px",
+                "paddingBottom": "12px",
+                "borderBottom": f"1px solid {t['border']}",
+            },
+        )
 
     # ── Version complète ────────────────────────────────────────────────────
-    return html.Div([
-
-        # Header : emoji + titre + meta
-        html.Div([
-            html.Span(emoji, style={"fontSize": "40px", "marginRight": "14px", "lineHeight": "1"}),
-            html.Div([
-                html.Div(titre, style={"color": t["text"], "fontWeight": "700",
-                                       "fontFamily": t["font"], "fontSize": "18px",
-                                       "lineHeight": "1.2", "marginBottom": "4px"}),
-                html.Div([
-                    html.Span(s.get("player_name", ""), style={"color": t["accent1"], "fontWeight": "600"}),
-                    html.Span(" · ", style={"color": t["subtext"]}),
-                    html.Span(s.get("game_id", "").upper(), style={"color": game_col}),
-                    html.Span(" · ", style={"color": t["subtext"]}),
-                    html.Span(f"{s.get('score', 0)} pts", style={"color": t["accent2"], "fontWeight": "600"}),
-                    html.Span(" · ", style={"color": t["subtext"]}),
-                    html.Span(f"{s.get('duration_sec', 0):.0f}s", style={"color": t["subtext"]}),
-                ], style={"fontSize": "12px"}),
-            ]),
-            # Badge profil
-            *([html.Div(profil_joueur, style={
-                "marginLeft": "auto", "background": t["accent1"] + "22",
-                "border": f"1px solid {t['accent1']}", "color": t["accent1"],
-                "borderRadius": "20px", "padding": "4px 12px",
-                "fontSize": "11px", "fontWeight": "700", "whiteSpace": "nowrap",
-                "fontFamily": t["font"],
-            })] if profil_joueur else []),
-        ], style={"display": "flex", "alignItems": "center", "marginBottom": "16px",
-                  "flexWrap": "wrap", "gap": "8px"}),
-
-        # Mock warning
-        *([html.Div("⚠ Résumé généré localement (API Mistral indisponible)", style={
-            "background": "#FFB80022", "border": "1px solid #FFB800", "color": "#FFB800",
-            "borderRadius": "6px", "padding": "8px 12px", "fontSize": "11px",
-            "marginBottom": "12px",
-        })] if is_mock else []),
-
-        # Résumé principal
-        html.Div([
-            html.Div("Résumé", style={"color": t["subtext"], "fontSize": "10px",
-                                       "textTransform": "uppercase", "letterSpacing": "2px",
-                                       "marginBottom": "6px"}),
-            html.Div(resume, style={"color": t["text"], "fontSize": "13px",
-                                     "lineHeight": "1.7"}),
-        ], style={"background": t["bg"], "borderRadius": "6px", "padding": "12px 16px",
-                  "marginBottom": "12px", "borderLeft": f"3px solid {t['accent2']}"}),
-
-        # Analyse du style de jeu
-        *([html.Div([
-            html.Div("Analyse du style de jeu", style={"color": t["subtext"], "fontSize": "10px",
-                                                         "textTransform": "uppercase",
-                                                         "letterSpacing": "2px", "marginBottom": "6px"}),
-            html.Div(analyse_style, style={"color": t["text"], "fontSize": "13px",
-                                            "lineHeight": "1.7"}),
-        ], style={"background": t["bg"], "borderRadius": "6px", "padding": "12px 16px",
-                  "marginBottom": "12px", "borderLeft": f"3px solid {t['accent1']}"})] if analyse_style else []),
-
-        # Classements
-        html.Div([
-            html.Div([
-                html.Span("🏆 ", style={"fontSize": "14px"}),
-                html.Span(cl_glob, style={"color": t["accent2"], "fontSize": "12px",
-                                           "lineHeight": "1.5"}),
-            ], style={"marginBottom": "6px"}),
-            html.Div([
-                html.Span("📊 ", style={"fontSize": "14px"}),
-                html.Span(cl_perso, style={"color": t["accent3"], "fontSize": "12px",
-                                            "lineHeight": "1.5"}),
-            ]),
-        ], style={"background": t["bg"], "borderRadius": "6px", "padding": "12px 16px",
-                  "marginBottom": "12px"}),
-
-        # Points forts + axes (côte à côte)
-        html.Div([
-            html.Div([
-                html.Div("💪 Points forts", style={"color": t["accent2"], "fontSize": "11px",
-                                                    "fontWeight": "700", "letterSpacing": "1px",
-                                                    "marginBottom": "8px"}),
-                *[html.Div([
-                    html.Span("✓ ", style={"color": t["accent2"], "fontWeight": "700"}),
-                    html.Span(p, style={"color": t["text"], "fontSize": "12px"}),
-                ], style={"marginBottom": "6px", "lineHeight": "1.4"}) for p in pf],
-            ], style={"flex": "1", "background": t["bg"], "borderRadius": "6px",
-                      "padding": "12px", "borderTop": f"2px solid {t['accent2']}"}),
-            html.Div([
-                html.Div("📈 Axes d'amélioration", style={"color": t["accent3"], "fontSize": "11px",
-                                                           "fontWeight": "700", "letterSpacing": "1px",
-                                                           "marginBottom": "8px"}),
-                *[html.Div([
-                    html.Span("→ ", style={"color": t["accent3"], "fontWeight": "700"}),
-                    html.Span(a, style={"color": t["text"], "fontSize": "12px"}),
-                ], style={"marginBottom": "6px", "lineHeight": "1.4"}) for a in axes],
-            ], style={"flex": "1", "background": t["bg"], "borderRadius": "6px",
-                      "padding": "12px", "borderTop": f"2px solid {t['accent3']}"}),
-        ], style={"display": "flex", "gap": "12px", "marginBottom": "12px"}),
-
-        # Conseil
-        html.Div([
-            html.Div([
-                html.Span("💡 ", style={"fontSize": "16px"}),
-                html.Span("Conseil coach : ", style={"color": t["accent1"], "fontWeight": "700",
-                                                      "fontSize": "12px"}),
-                html.Span(conseil, style={"color": t["text"], "fontSize": "12px",
-                                           "lineHeight": "1.5"}),
-            ], style={"marginBottom": "8px" if objectif else "0"}),
-            *([html.Div([
-                html.Span("🎯 ", style={"fontSize": "16px"}),
-                html.Span("Objectif : ", style={"color": "#FFB800", "fontWeight": "700",
-                                                 "fontSize": "12px"}),
-                html.Span(objectif, style={"color": t["text"], "fontSize": "12px",
-                                            "lineHeight": "1.5"}),
-            ])] if objectif else []),
-        ], style={"background": t["bg"], "borderRadius": "6px", "padding": "12px 16px",
-                  "borderLeft": f"3px solid {t['accent1']}"}),
-    ])
+    return html.Div(
+        [
+            # Header : emoji + titre + meta
+            html.Div(
+                [
+                    html.Span(
+                        emoji,
+                        style={
+                            "fontSize": "40px",
+                            "marginRight": "14px",
+                            "lineHeight": "1",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                titre,
+                                style={
+                                    "color": t["text"],
+                                    "fontWeight": "700",
+                                    "fontFamily": t["font"],
+                                    "fontSize": "18px",
+                                    "lineHeight": "1.2",
+                                    "marginBottom": "4px",
+                                },
+                            ),
+                            html.Div(
+                                [
+                                    html.Span(
+                                        s.get("player_name", ""),
+                                        style={
+                                            "color": t["accent1"],
+                                            "fontWeight": "600",
+                                        },
+                                    ),
+                                    html.Span(" · ", style={"color": t["subtext"]}),
+                                    html.Span(
+                                        s.get("game_id", "").upper(),
+                                        style={"color": game_col},
+                                    ),
+                                    html.Span(" · ", style={"color": t["subtext"]}),
+                                    html.Span(
+                                        f"{s.get('score', 0)} pts",
+                                        style={
+                                            "color": t["accent2"],
+                                            "fontWeight": "600",
+                                        },
+                                    ),
+                                    html.Span(" · ", style={"color": t["subtext"]}),
+                                    html.Span(
+                                        f"{s.get('duration_sec', 0):.0f}s",
+                                        style={"color": t["subtext"]},
+                                    ),
+                                ],
+                                style={"fontSize": "12px"},
+                            ),
+                        ]
+                    ),
+                    # Badge profil
+                    *(
+                        [
+                            html.Div(
+                                profil_joueur,
+                                style={
+                                    "marginLeft": "auto",
+                                    "background": t["accent1"] + "22",
+                                    "border": f"1px solid {t['accent1']}",
+                                    "color": t["accent1"],
+                                    "borderRadius": "20px",
+                                    "padding": "4px 12px",
+                                    "fontSize": "11px",
+                                    "fontWeight": "700",
+                                    "whiteSpace": "nowrap",
+                                    "fontFamily": t["font"],
+                                },
+                            )
+                        ]
+                        if profil_joueur
+                        else []
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "alignItems": "center",
+                    "marginBottom": "16px",
+                    "flexWrap": "wrap",
+                    "gap": "8px",
+                },
+            ),
+            # Mock warning
+            *(
+                [
+                    html.Div(
+                        "⚠ Résumé généré localement (API Mistral indisponible)",
+                        style={
+                            "background": "#FFB80022",
+                            "border": "1px solid #FFB800",
+                            "color": "#FFB800",
+                            "borderRadius": "6px",
+                            "padding": "8px 12px",
+                            "fontSize": "11px",
+                            "marginBottom": "12px",
+                        },
+                    )
+                ]
+                if is_mock
+                else []
+            ),
+            # Résumé principal
+            html.Div(
+                [
+                    html.Div(
+                        "Résumé",
+                        style={
+                            "color": t["subtext"],
+                            "fontSize": "10px",
+                            "textTransform": "uppercase",
+                            "letterSpacing": "2px",
+                            "marginBottom": "6px",
+                        },
+                    ),
+                    html.Div(
+                        resume,
+                        style={
+                            "color": t["text"],
+                            "fontSize": "13px",
+                            "lineHeight": "1.7",
+                        },
+                    ),
+                ],
+                style={
+                    "background": t["bg"],
+                    "borderRadius": "6px",
+                    "padding": "12px 16px",
+                    "marginBottom": "12px",
+                    "borderLeft": f"3px solid {t['accent2']}",
+                },
+            ),
+            # Analyse du style de jeu
+            *(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                "Analyse du style de jeu",
+                                style={
+                                    "color": t["subtext"],
+                                    "fontSize": "10px",
+                                    "textTransform": "uppercase",
+                                    "letterSpacing": "2px",
+                                    "marginBottom": "6px",
+                                },
+                            ),
+                            html.Div(
+                                analyse_style,
+                                style={
+                                    "color": t["text"],
+                                    "fontSize": "13px",
+                                    "lineHeight": "1.7",
+                                },
+                            ),
+                        ],
+                        style={
+                            "background": t["bg"],
+                            "borderRadius": "6px",
+                            "padding": "12px 16px",
+                            "marginBottom": "12px",
+                            "borderLeft": f"3px solid {t['accent1']}",
+                        },
+                    )
+                ]
+                if analyse_style
+                else []
+            ),
+            # Classements
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Span("🏆 ", style={"fontSize": "14px"}),
+                            html.Span(
+                                cl_glob,
+                                style={
+                                    "color": t["accent2"],
+                                    "fontSize": "12px",
+                                    "lineHeight": "1.5",
+                                },
+                            ),
+                        ],
+                        style={"marginBottom": "6px"},
+                    ),
+                    html.Div(
+                        [
+                            html.Span("📊 ", style={"fontSize": "14px"}),
+                            html.Span(
+                                cl_perso,
+                                style={
+                                    "color": t["accent3"],
+                                    "fontSize": "12px",
+                                    "lineHeight": "1.5",
+                                },
+                            ),
+                        ]
+                    ),
+                ],
+                style={
+                    "background": t["bg"],
+                    "borderRadius": "6px",
+                    "padding": "12px 16px",
+                    "marginBottom": "12px",
+                },
+            ),
+            # Points forts + axes (côte à côte)
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Div(
+                                "💪 Points forts",
+                                style={
+                                    "color": t["accent2"],
+                                    "fontSize": "11px",
+                                    "fontWeight": "700",
+                                    "letterSpacing": "1px",
+                                    "marginBottom": "8px",
+                                },
+                            ),
+                            *[
+                                html.Div(
+                                    [
+                                        html.Span(
+                                            "✓ ",
+                                            style={
+                                                "color": t["accent2"],
+                                                "fontWeight": "700",
+                                            },
+                                        ),
+                                        html.Span(
+                                            p,
+                                            style={
+                                                "color": t["text"],
+                                                "fontSize": "12px",
+                                            },
+                                        ),
+                                    ],
+                                    style={"marginBottom": "6px", "lineHeight": "1.4"},
+                                )
+                                for p in pf
+                            ],
+                        ],
+                        style={
+                            "flex": "1",
+                            "background": t["bg"],
+                            "borderRadius": "6px",
+                            "padding": "12px",
+                            "borderTop": f"2px solid {t['accent2']}",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                "📈 Axes d'amélioration",
+                                style={
+                                    "color": t["accent3"],
+                                    "fontSize": "11px",
+                                    "fontWeight": "700",
+                                    "letterSpacing": "1px",
+                                    "marginBottom": "8px",
+                                },
+                            ),
+                            *[
+                                html.Div(
+                                    [
+                                        html.Span(
+                                            "→ ",
+                                            style={
+                                                "color": t["accent3"],
+                                                "fontWeight": "700",
+                                            },
+                                        ),
+                                        html.Span(
+                                            a,
+                                            style={
+                                                "color": t["text"],
+                                                "fontSize": "12px",
+                                            },
+                                        ),
+                                    ],
+                                    style={"marginBottom": "6px", "lineHeight": "1.4"},
+                                )
+                                for a in axes
+                            ],
+                        ],
+                        style={
+                            "flex": "1",
+                            "background": t["bg"],
+                            "borderRadius": "6px",
+                            "padding": "12px",
+                            "borderTop": f"2px solid {t['accent3']}",
+                        },
+                    ),
+                ],
+                style={"display": "flex", "gap": "12px", "marginBottom": "12px"},
+            ),
+            # Conseil
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Span("💡 ", style={"fontSize": "16px"}),
+                            html.Span(
+                                "Conseil coach : ",
+                                style={
+                                    "color": t["accent1"],
+                                    "fontWeight": "700",
+                                    "fontSize": "12px",
+                                },
+                            ),
+                            html.Span(
+                                conseil,
+                                style={
+                                    "color": t["text"],
+                                    "fontSize": "12px",
+                                    "lineHeight": "1.5",
+                                },
+                            ),
+                        ],
+                        style={"marginBottom": "8px" if objectif else "0"},
+                    ),
+                    *(
+                        [
+                            html.Div(
+                                [
+                                    html.Span("🎯 ", style={"fontSize": "16px"}),
+                                    html.Span(
+                                        "Objectif : ",
+                                        style={
+                                            "color": "#FFB800",
+                                            "fontWeight": "700",
+                                            "fontSize": "12px",
+                                        },
+                                    ),
+                                    html.Span(
+                                        objectif,
+                                        style={
+                                            "color": t["text"],
+                                            "fontSize": "12px",
+                                            "lineHeight": "1.5",
+                                        },
+                                    ),
+                                ]
+                            )
+                        ]
+                        if objectif
+                        else []
+                    ),
+                ],
+                style={
+                    "background": t["bg"],
+                    "borderRadius": "6px",
+                    "padding": "12px 16px",
+                    "borderLeft": f"3px solid {t['accent1']}",
+                },
+            ),
+        ]
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CALLBACKS RÉSUMÉS
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @app.callback(
     Output("summary-store", "data"),
@@ -2469,13 +3333,14 @@ def refresh_summaries(n):
     """Rafraîchit les résumés depuis Supabase toutes les 8s."""
     try:
         from core.llm_summary import fetch_latest_summaries
+
         return fetch_latest_summaries(limit=20)
     except Exception:
         return []
 
 
 @app.callback(
-    Output("summary-latest",  "children"),
+    Output("summary-latest", "children"),
     Output("summary-history", "children"),
     Input("summary-store", "data"),
     dash.dependencies.State("theme-store", "data"),
@@ -2484,29 +3349,43 @@ def render_summaries(summaries, theme):
     t = THEMES[theme]
 
     if not summaries:
-        empty = html.Div([
-            html.Div("Aucun résumé disponible", style={
-                "color": t["subtext"], "fontSize": "13px", "textAlign": "center",
-                "padding": "32px",
-            }),
-            html.Div("Lance une partie pour générer ton premier résumé IA !",
-                     style={"color": t["subtext"], "fontSize": "11px",
-                            "textAlign": "center", "fontStyle": "italic"}),
-        ])
+        empty = html.Div(
+            [
+                html.Div(
+                    "Aucun résumé disponible",
+                    style={
+                        "color": t["subtext"],
+                        "fontSize": "13px",
+                        "textAlign": "center",
+                        "padding": "32px",
+                    },
+                ),
+                html.Div(
+                    "Lance une partie pour générer ton premier résumé IA !",
+                    style={
+                        "color": t["subtext"],
+                        "fontSize": "11px",
+                        "textAlign": "center",
+                        "fontStyle": "italic",
+                    },
+                ),
+            ]
+        )
         return empty, empty
 
     # Dernière session
-    latest  = _render_summary_card(summaries[0], t, compact=False)
+    latest = _render_summary_card(summaries[0], t, compact=False)
 
     # Historique (sans la première)
     if len(summaries) > 1:
-        history = html.Div([
-            _render_summary_card(s, t, compact=True) for s in summaries[1:]
-        ])
+        history = html.Div(
+            [_render_summary_card(s, t, compact=True) for s in summaries[1:]]
+        )
     else:
-        history = html.Div("Lance d'autres parties pour voir l'historique.",
-                           style={"color": t["subtext"], "fontSize": "12px",
-                                  "fontStyle": "italic"})
+        history = html.Div(
+            "Lance d'autres parties pour voir l'historique.",
+            style={"color": t["subtext"], "fontSize": "12px", "fontStyle": "italic"},
+        )
 
     return latest, history
 
@@ -2514,6 +3393,7 @@ def render_summaries(summaries, theme):
 # ─────────────────────────────────────────────────────────────────────────────
 # CALLBACKS AGENT IA
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @app.callback(
     Output("dropdown-agent-player", "options"),
@@ -2525,13 +3405,17 @@ def update_agent_players(game_id):
         return [{"label": p, "value": p} for p in mock_players]
     try:
         from core.supabase_client import fetch_all_sessions
+
         sessions = fetch_all_sessions()
-        players = sorted({
-            s["player_name"] for s in sessions
-            if s.get("game_id") == game_id
-            and s.get("player_name")
-            and not s["player_name"].startswith("Agent_")
-        })
+        players = sorted(
+            {
+                s["player_name"]
+                for s in sessions
+                if s.get("game_id") == game_id
+                and s.get("player_name")
+                and not s["player_name"].startswith("Agent_")
+            }
+        )
         if players:
             return [{"label": p, "value": p} for p in players]
     except Exception:
@@ -2544,17 +3428,25 @@ def update_agent_players(game_id):
     Output("agent-feedback", "style"),
     Output("agent-pid-store", "data"),
     Input("btn-launch-agent", "n_clicks"),
-    dash.dependencies.State("dropdown-agent-game",   "value"),
+    dash.dependencies.State("dropdown-agent-game", "value"),
     dash.dependencies.State("dropdown-agent-player", "value"),
-    dash.dependencies.State("slider-agent-noise",    "value"),
+    dash.dependencies.State("slider-agent-noise", "value"),
     prevent_initial_call=True,
 )
 def launch_agent(n_clicks, game_id, player_name, fidelity):
     """Lance l'agent IA en subprocess qui rejoue les inputs du joueur sélectionné."""
     if not game_id:
-        return "⚠️ Sélectionne un jeu.", {"marginTop": "12px", "fontSize": "12px", "color": "#FFB800"}, None
+        return (
+            "⚠️ Sélectionne un jeu.",
+            {"marginTop": "12px", "fontSize": "12px", "color": "#FFB800"},
+            None,
+        )
     if not player_name:
-        return "⚠️ Sélectionne un joueur à imiter.", {"marginTop": "12px", "fontSize": "12px", "color": "#FFB800"}, None
+        return (
+            "⚠️ Sélectionne un joueur à imiter.",
+            {"marginTop": "12px", "fontSize": "12px", "color": "#FFB800"},
+            None,
+        )
 
     # Fidélité 0–100 → noise_level 2.0–0.0
     noise = round((100 - (fidelity or 80)) / 50, 2)
@@ -2563,25 +3455,34 @@ def launch_agent(n_clicks, game_id, player_name, fidelity):
     try:
         proc = subprocess.Popen(
             [
-                sys.executable, "main.py",
-                game_id, agent_session_name,
-                "--agent", player_name,
-                "--mode", "player",
-                "--noise", str(noise),
+                sys.executable,
+                "main.py",
+                game_id,
+                agent_session_name,
+                "--agent",
+                player_name,
+                "--mode",
+                "player",
+                "--noise",
+                str(noise),
             ],
             cwd=ROOT_DIR,
         )
-        msg   = f"🤖 Agent '{player_name}' lancé sur {game_id} (fidélité {fidelity}%)"
+        msg = f"🤖 Agent '{player_name}' lancé sur {game_id} (fidélité {fidelity}%)"
         style = {"marginTop": "12px", "fontSize": "12px", "color": "#00F5FF"}
         return msg, style, proc.pid
     except Exception as e:
-        return f"❌ Erreur : {e}", {"marginTop": "12px", "fontSize": "12px", "color": "#FF4C6A"}, None
+        return (
+            f"❌ Erreur : {e}",
+            {"marginTop": "12px", "fontSize": "12px", "color": "#FF4C6A"},
+            None,
+        )
 
 
 @app.callback(
     Output("agent-feedback", "children", allow_duplicate=True),
-    Output("agent-feedback", "style",    allow_duplicate=True),
-    Output("agent-pid-store", "data",    allow_duplicate=True),
+    Output("agent-feedback", "style", allow_duplicate=True),
+    Output("agent-pid-store", "data", allow_duplicate=True),
     Input("btn-stop-agent", "n_clicks"),
     dash.dependencies.State("agent-pid-store", "data"),
     prevent_initial_call=True,
@@ -2589,22 +3490,35 @@ def launch_agent(n_clicks, game_id, player_name, fidelity):
 def stop_agent(n_clicks, pid):
     """Arrête le subprocess de l'agent en cours."""
     if not pid:
-        return "⚠️ Aucun agent en cours.", {"marginTop": "12px", "fontSize": "12px", "color": "#FFB800"}, None
+        return (
+            "⚠️ Aucun agent en cours.",
+            {"marginTop": "12px", "fontSize": "12px", "color": "#FFB800"},
+            None,
+        )
     try:
         subprocess.call(["taskkill", "/F", "/T", "/PID", str(pid)])
-        return "⏹ Agent arrêté.", {"marginTop": "12px", "fontSize": "12px", "color": "#FF4C6A"}, None
+        return (
+            "⏹ Agent arrêté.",
+            {"marginTop": "12px", "fontSize": "12px", "color": "#FF4C6A"},
+            None,
+        )
     except Exception as e:
-        return f"❌ Erreur arrêt : {e}", {"marginTop": "12px", "fontSize": "12px", "color": "#FF4C6A"}, None
+        return (
+            f"❌ Erreur arrêt : {e}",
+            {"marginTop": "12px", "fontSize": "12px", "color": "#FF4C6A"},
+            None,
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CALLBACKS POST-SESSION & CHAT
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @app.callback(
-    Output("url-params-store",      "data"),
-    Output("page-store",            "data",     allow_duplicate=True),
-    Output("postsession-interval",  "disabled"),
+    Output("url-params-store", "data"),
+    Output("page-store", "data", allow_duplicate=True),
+    Output("postsession-interval", "disabled"),
     Input("url", "search"),
     prevent_initial_call=True,
 )
@@ -2614,10 +3528,11 @@ def parse_url(search):
         return {}, dash.no_update, True
     try:
         from urllib.parse import parse_qs
+
         params = parse_qs(search.lstrip("?"))
         player = params.get("player", [None])[0]
-        game   = params.get("game",   [None])[0]
-        ts     = params.get("ts",     [None])[0]
+        game = params.get("game", [None])[0]
+        ts = params.get("ts", [None])[0]
         if player and game:
             store = {"player": player, "game": game}
             if ts:
@@ -2629,7 +3544,7 @@ def parse_url(search):
 
 
 @app.callback(
-    Output("postsession-summary-data",  "data"),
+    Output("postsession-summary-data", "data"),
     Output("postsession-interval", "disabled", allow_duplicate=True),
     Input("postsession-interval", "n_intervals"),
     dash.dependencies.State("url-params-store", "data"),
@@ -2638,14 +3553,15 @@ def parse_url(search):
 def load_postsession_summary(n, params):
     """Polling toutes les 2s jusqu'à ce que le résumé LLM soit disponible."""
     player = (params or {}).get("player", "")
-    game   = (params or {}).get("game",   "")
-    ts_min = (params or {}).get("ts", 0)   # timestamp minimum accepté
+    game = (params or {}).get("game", "")
+    ts_min = (params or {}).get("ts", 0)  # timestamp minimum accepté
     if not player or not game:
         return dash.no_update, True
 
     try:
         from core.llm_summary import fetch_latest_summaries
         import datetime, time as _t
+
         summaries = fetch_latest_summaries(limit=30)
         for s in summaries:
             if s.get("player_name") != player or s.get("game_id") != game:
@@ -2656,12 +3572,13 @@ def load_postsession_summary(n, params):
                 try:
                     # Supabase renvoie ISO 8601 : "2025-03-05T12:34:56.123+00:00"
                     from datetime import timezone
+
                     dt = datetime.datetime.fromisoformat(created.replace("Z", "+00:00"))
-                    if dt.timestamp() < ts_min - 5:   # tolérance 5s
+                    if dt.timestamp() < ts_min - 5:  # tolérance 5s
                         continue
                 except Exception:
-                    pass   # Si on ne peut pas parser, on accepte quand même
-            return s, True   # Résumé trouvé → stop polling
+                    pass  # Si on ne peut pas parser, on accepte quand même
+            return s, True  # Résumé trouvé → stop polling
     except Exception:
         pass
 
@@ -2677,41 +3594,66 @@ def render_chat_messages(history, theme):
     """Affiche les messages du chatbot."""
     t = THEMES[theme]
     if not history:
-        return [html.Div([
-            html.Span("🤖", style={"fontSize": "18px", "marginRight": "10px"}),
-            html.Span("Bonjour ! Je suis ton coach IA. Pose-moi une question sur tes performances.",
-                      style={"color": t["text"], "fontSize": "13px"}),
-        ], style={"background": t["bg"], "borderRadius": "8px", "padding": "12px 16px",
-                  "marginBottom": "8px", "borderLeft": f"3px solid {t['accent1']}"})]
+        return [
+            html.Div(
+                [
+                    html.Span("🤖", style={"fontSize": "18px", "marginRight": "10px"}),
+                    html.Span(
+                        "Bonjour ! Je suis ton coach IA. Pose-moi une question sur tes performances.",
+                        style={"color": t["text"], "fontSize": "13px"},
+                    ),
+                ],
+                style={
+                    "background": t["bg"],
+                    "borderRadius": "8px",
+                    "padding": "12px 16px",
+                    "marginBottom": "8px",
+                    "borderLeft": f"3px solid {t['accent1']}",
+                },
+            )
+        ]
 
     messages = []
     for msg in history:
         is_user = msg["role"] == "user"
-        messages.append(html.Div([
-            html.Span("👤" if is_user else "🤖",
-                      style={"fontSize": "16px", "marginRight": "8px"}),
-            html.Span(msg["content"],
-                      style={"color": t["text"], "fontSize": "13px", "lineHeight": "1.5"}),
-        ], style={
-            "background":   t["bg"] if not is_user else t["card"],
-            "borderRadius": "8px",
-            "padding":      "10px 14px",
-            "marginBottom": "8px",
-            "borderLeft":   f"3px solid {t['accent2'] if is_user else t['accent1']}",
-            "marginLeft":   "20px" if is_user else "0",
-        }))
+        messages.append(
+            html.Div(
+                [
+                    html.Span(
+                        "👤" if is_user else "🤖",
+                        style={"fontSize": "16px", "marginRight": "8px"},
+                    ),
+                    html.Span(
+                        msg["content"],
+                        style={
+                            "color": t["text"],
+                            "fontSize": "13px",
+                            "lineHeight": "1.5",
+                        },
+                    ),
+                ],
+                style={
+                    "background": t["bg"] if not is_user else t["card"],
+                    "borderRadius": "8px",
+                    "padding": "10px 14px",
+                    "marginBottom": "8px",
+                    "borderLeft": f"3px solid {t['accent2'] if is_user else t['accent1']}",
+                    "marginLeft": "20px" if is_user else "0",
+                },
+            )
+        )
     return messages
 
 
 @app.callback(
-    Output("chat-store",   "data"),
-    Output("chat-input",   "value"),
+    Output("chat-store", "data"),
+    Output("chat-input", "value"),
     Output("chat-loading", "children"),
     Input("btn-chat-send", "n_clicks"),
-    Input("chat-input",    "n_submit"),
-    dash.dependencies.State("chat-input",      "value"),
-    dash.dependencies.State("chat-store",      "data"),
-    dash.dependencies.State("sessions-store",  "data"),
+    Input("chat-input", "n_submit"),
+    dash.dependencies.State("chat-input", "value"),
+    dash.dependencies.State("chat-store", "data"),
+    dash.dependencies.State("sessions-store", "data"),
     prevent_initial_call=True,
 )
 def send_chat_message(n_clicks, n_submit, message, history, sessions_data):
@@ -2739,12 +3681,13 @@ def send_chat_message(n_clicks, n_submit, message, history, sessions_data):
     # Appel LLM
     try:
         from core.llm_summary import chat_with_llm
+
         response = chat_with_llm(message.strip(), history, context)
     except Exception as e:
         response = f"Erreur : {e}"
 
     new_history = history + [
-        {"role": "user",      "content": message.strip()},
+        {"role": "user", "content": message.strip()},
         {"role": "assistant", "content": response},
     ]
     return new_history, "", ""
