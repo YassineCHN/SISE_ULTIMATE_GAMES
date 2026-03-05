@@ -30,13 +30,23 @@ class ControllerState:
     buttons: dict = field(default_factory=dict)
     hat: tuple = (0, 0)
     source: str = "controller"  # "controller" ou "keyboard"
+    button_l1: bool = False  # L1 / LB — index varie selon la manette
+    button_r1: bool = False  # R1 / RB — index varie selon la manette
 
 
 class Controller:
     AXIS_MAP = {
-        "xbox": {"lx": 0, "ly": 1, "rx": 3, "ry": 4, "lt": 2, "rt": 5},
-        "ps": {"lx": 0, "ly": 1, "rx": 2, "ry": 3, "lt": 4, "rt": 5},
+        "xbox":    {"lx": 0, "ly": 1, "rx": 3, "ry": 4, "lt": 2, "rt": 5},
+        "ps3":     {"lx": 0, "ly": 1, "rx": 4, "ry": 5, "lt": 2, "rt": 3},  # DualShock 3 DirectInput
+        "ps":      {"lx": 0, "ly": 1, "rx": 2, "ry": 3, "lt": 4, "rt": 5},  # PS4/PS5
         "generic": {"lx": 0, "ly": 1, "rx": 2, "ry": 3, "lt": 4, "rt": 5},
+    }
+    # Indices des boutons L1/R1 selon le type de manette
+    L1R1_MAP = {
+        "xbox":    (4, 5),   # LB, RB
+        "ps3":     (10, 11), # L1, R1 sur DualShock 3 DirectInput
+        "ps":      (4, 5),   # L1, R1 sur PS4/PS5
+        "generic": (4, 5),
     }
     DEADZONE = 0.08
 
@@ -60,7 +70,9 @@ class Controller:
         print(f"🎮 Manette détectée : {self.joystick.get_name()}")
         if "xbox" in name or "xinput" in name:
             self.controller_type = "xbox"
-        elif any(k in name for k in ("playstation", "dualshock", "dualsense", "ps4", "ps5", "ps3", "sony", "wireless controller")):
+        elif any(k in name for k in ("ps3", "dualshock 3", "playstation(r)3", "sixaxis")):
+            self.controller_type = "ps3"  # Détecté avant "ps" (plus spécifique)
+        elif any(k in name for k in ("playstation", "dualshock", "dualsense", "ps4", "ps5", "sony", "wireless controller")):
             self.controller_type = "ps"
         self._axis_map = self.AXIS_MAP[self.controller_type]
         n_axes = self.joystick.get_numaxes()
@@ -101,6 +113,8 @@ class Controller:
             buttons=buttons,
             hat=(hat_x, hat_y),
             source="keyboard",
+            button_l1=bool(keys[pygame.K_LSHIFT]),
+            button_r1=bool(keys[pygame.K_SPACE]),
         )
 
     def get_state(self) -> ControllerState:
@@ -142,6 +156,7 @@ class Controller:
             for i in range(self.joystick.get_numbuttons())
         }
         hat = self.joystick.get_hat(0) if self.joystick.get_numhats() > 0 else (0, 0)
+        l1_idx, r1_idx = self.L1R1_MAP[self.controller_type]
         return ControllerState(
             timestamp=time.time(),
             axis_left_x=safe_axis(m["lx"]),
@@ -153,6 +168,8 @@ class Controller:
             buttons=buttons,
             hat=hat,
             source="controller",
+            button_l1=buttons.get(l1_idx, False),
+            button_r1=buttons.get(r1_idx, False),
         )
 
     def is_connected(self) -> bool:

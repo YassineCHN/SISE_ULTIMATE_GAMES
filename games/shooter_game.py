@@ -224,7 +224,7 @@ class TwinStickShooter(BaseGame):
             move_y /= mag
 
         # --- Dash (gâchette gauche ou LSHIFT) ---
-        dash_input = state.trigger_left > 0.5 or keys[pygame.K_LSHIFT]
+        dash_input = state.button_l1 or state.trigger_left > 0.5 or keys[pygame.K_LSHIFT]
         if dash_input and self.dash_cooldown <= 0 and not self.dashing:
             if abs(move_x) > 0.1 or abs(move_y) > 0.1:
                 self.dashing = True
@@ -252,7 +252,7 @@ class TwinStickShooter(BaseGame):
         self.player.x, self.player.y = new_x, new_y
 
         # --- Tir (gâchette droite ou ESPACE) ---
-        shoot_input = state.trigger_right > 0.3 or keys[pygame.K_SPACE]
+        shoot_input = state.button_r1 or state.trigger_right > 0.3 or keys[pygame.K_SPACE]
         if shoot_input and self.shoot_cooldown <= 0:
             # Direction de tir
             if abs(aim_x) > 0.1 or abs(aim_y) > 0.1:
