@@ -580,18 +580,42 @@ _FEAT_LABELS = {
 }
 
 
-def _profils_no_data(theme, msg="Pas assez de sessions shooter pour l'analyse."):
+def _profils_no_data(theme, msg="Pas assez de sessions shooter pour l'analyse.", n_current=0):
     t = THEMES[theme]
+    progress_pct = min(100, int(n_current / 5 * 100))
     return html.Div([
         html.Div("🧬 Analyse Comportementale · Shooter", style={
             "color": t["accent1"], "fontSize": "22px",
             "fontWeight": "700", "fontFamily": t["font"], "marginBottom": "16px",
         }),
         make_card([
-            html.Div("⚠️  " + msg, style={"color": t["subtext"], "fontSize": "14px",
-                                            "textAlign": "center", "padding": "40px"}),
-            html.Div("Jouez des parties en mode 'shooter' pour alimenter l'analyse.",
-                     style={"color": t["subtext"], "fontSize": "12px", "textAlign": "center"}),
+            html.Div("⚠️  " + msg, style={
+                "color": t["text"], "fontSize": "15px", "textAlign": "center",
+                "padding": "24px 40px 12px",
+            }),
+            html.Div("Cette page analyse les styles de jeu via clustering KMeans sur vos sessions shooter.",
+                     style={"color": t["subtext"], "fontSize": "12px", "textAlign": "center", "marginBottom": "20px"}),
+            # Barre de progression vers 5 sessions
+            html.Div([
+                html.Div(f"Progression : {n_current}/5 sessions shooter",
+                         style={"color": t["subtext"], "fontSize": "11px", "marginBottom": "6px",
+                                "textAlign": "center"}),
+                html.Div(style={
+                    "background": t["border"], "borderRadius": "4px", "height": "8px",
+                    "width": "260px", "margin": "0 auto",
+                }),
+                html.Div(style={
+                    "background": t["gradient"], "borderRadius": "4px", "height": "8px",
+                    "width": f"{progress_pct * 2.6:.0f}px", "margin": "-8px auto 0",
+                    "transition": "width 0.4s",
+                }),
+            ], style={"marginBottom": "20px"}),
+            html.Div([
+                html.Span("Lancez des parties en mode "),
+                html.Code("shooter", style={"background": t["card"], "padding": "1px 6px",
+                                            "borderRadius": "3px", "color": t["accent1"]}),
+                html.Span(" depuis la page Live Game pour alimenter l'analyse."),
+            ], style={"color": t["subtext"], "fontSize": "12px", "textAlign": "center"}),
         ], theme),
     ])
 
@@ -607,10 +631,12 @@ def page_profils(theme, df_real=None, active_tab="clustering"):
     if result is None:
         n_shooter = 0
         if df_real is not None and "game_id" in df_real.columns:
-            n_shooter = (df_real["game_id"] == "shooter").sum()
+            n_shooter = int((df_real["game_id"] == "shooter").sum())
         if n_shooter > 0:
-            return _profils_no_data(theme, f"Seulement {n_shooter} session(s) shooter — minimum 5 requis.")
-        return _profils_no_data(theme)
+            return _profils_no_data(theme,
+                f"Seulement {n_shooter} session(s) shooter enregistrée(s) — minimum 5 requis pour le clustering.",
+                n_current=n_shooter)
+        return _profils_no_data(theme, n_current=0)
 
     cl = result["clustering"]
     pr = result["progression"]
@@ -1990,7 +2016,8 @@ app.layout = html.Div([
     dcc.Store(id="chat-store",              data=[]),
     dcc.Store(id="postsession-summary-data",data=None),
     dcc.Location(id="url", refresh=False),
-    dcc.Interval(id="refresh-interval",          interval=5000,  n_intervals=0),
+    dcc.Interval(id="refresh-interval",          interval=10000, n_intervals=0),  # sessions Supabase
+    dcc.Interval(id="live-interval",             interval=3000,  n_intervals=0),  # flux inputs live
     dcc.Interval(id="summary-refresh-interval",  interval=8000,  n_intervals=0),
     dcc.Interval(id="postsession-interval",      interval=2000,  n_intervals=0, disabled=True),
 
@@ -2144,7 +2171,7 @@ def save_profils_tab(tab):
     Input("theme-store",              "data"),
     Input("page-store",               "data"),
     Input("postsession-summary-data", "data"),
-    Input("sessions-store",           "data"),
+    dash.dependencies.State("sessions-store",     "data"),   # State : pas de rebuild sur refresh
     dash.dependencies.State("url-params-store",  "data"),
     dash.dependencies.State("profils-tab-store", "data"),
 )
@@ -2268,7 +2295,7 @@ def launch_game(n_clicks, player_name, game_id):
     Output("gauge-rt",            "children"),
     Output("live-buttons-display","children"),
     Output("live-source-badge",   "children"),
-    Input("refresh-interval", "n_intervals"),
+    Input("live-interval", "n_intervals"),   # intervalle dédié au flux live (3s)
     dash.dependencies.State("theme-store", "data"),
 )
 def update_live_inputs(n, theme):
