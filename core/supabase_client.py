@@ -40,7 +40,6 @@ SESSION_COLUMNS = [
     "rt_brutality",
     "reaction_time_avg_ms",
     "input_regularity",
-    "source",
     "score",
 ]
 
@@ -52,7 +51,6 @@ def _get_client():
             "❌ SUPABASE_URL ou SUPABASE_KEY manquant dans le fichier .env"
         )
     from supabase import create_client
-
     return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
@@ -156,9 +154,8 @@ def fetch_latest_sessions(limit: int = 20) -> list[dict]:
         return []
 
 
-def save_profile_to_supabase(
-    player_name: str, cluster_id: int, cluster_name: str, features_dict: dict
-) -> bool:
+def save_profile_to_supabase(player_name: str, cluster_id: int,
+                              cluster_name: str, features_dict: dict) -> bool:
     """
     Upsert un profil ML dans la table `profils_ml`.
     Appelé par le pipeline de clustering après calcul.
@@ -171,7 +168,6 @@ def save_profile_to_supabase(
     """
     try:
         import json
-
         client = _get_client()
         row = {
             "player_name": player_name,
@@ -181,7 +177,9 @@ def save_profile_to_supabase(
         }
         # Upsert : met à jour si le joueur existe déjà
         result = (
-            client.table("profils_ml").upsert(row, on_conflict="player_name").execute()
+            client.table("profils_ml")
+            .upsert(row, on_conflict="player_name")
+            .execute()
         )
         print(f"🧬 Profil '{cluster_name}' enregistré pour {player_name}")
         return True
@@ -198,4 +196,33 @@ def fetch_all_profiles() -> list[dict]:
         return result.data or []
     except Exception as e:
         print(f"⚠️  Supabase fetch profils échoué : {e}")
+        return []
+
+def send_inputs_batch(batch: list[dict]) -> bool:
+    """
+    Insère un batch d'inputs live dans Supabase.
+    Appelé toutes les 500ms depuis la boucle pygame.
+    """
+    try:
+        client = _get_client()
+        client.table("inputs_live").insert(batch).execute()
+        return True
+    except Exception as e:
+        print(f"⚠️ inputs_live batch échoué : {e}")
+        return False
+    
+def fetch_live_inputs(session_token: str = None, limit: int = 60) -> list[dict]:
+    """
+    Récupère les derniers inputs live.
+    Si session_token fourni, filtre sur la session en cours.
+    """
+    try:
+        client = _get_client()
+        query = client.table("inputs_live").select("*").order("captured_at", desc=True).limit(limit)
+        if session_token:
+            query = query.eq("session_token", session_token)
+        result = query.execute()
+        return list(reversed(result.data or []))
+    except Exception as e:
+        print(f"⚠️ fetch inputs_live échoué : {e}")
         return []
