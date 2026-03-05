@@ -37,9 +37,16 @@ class ControllerState:
 class Controller:
     AXIS_MAP = {
         "xbox":    {"lx": 0, "ly": 1, "rx": 3, "ry": 4, "lt": 2, "rt": 5},
-        "ps3":     {"lx": 0, "ly": 1, "rx": 4, "ry": 5, "lt": 2, "rt": 3},  # DualShock 3 DirectInput natif
-        "ps":      {"lx": 0, "ly": 1, "rx": 2, "ry": 5, "lt": 4, "rt": 4},  # PS4/PS5 (ry=axe5, R2=digital)
+        "ps3":     {"lx": 0, "ly": 1, "rx": 4, "ry": 5, "lt": 2, "rt": 3},  # DualShock 3 DirectInput
+        "ps":      {"lx": 0, "ly": 1, "rx": 2, "ry": 3, "lt": 4, "rt": 5},  # PS4/PS5
         "generic": {"lx": 0, "ly": 1, "rx": 2, "ry": 3, "lt": 4, "rt": 5},
+    }
+    # Indices des boutons L1/R1 selon le type de manette
+    L1R1_MAP = {
+        "xbox":    (4, 5),   # LB, RB
+        "ps3":     (10, 11), # L1, R1 sur DualShock 3 DirectInput
+        "ps":      (4, 5),   # L1, R1 sur PS4/PS5
+        "generic": (4, 5),
     }
     DEADZONE = 0.08
 
@@ -49,10 +56,6 @@ class Controller:
         self.joystick = None
         self.controller_type = "generic"
         self._axis_map = self.AXIS_MAP["generic"]
-        self._l1_idx = 4   # Indice bouton L1 (peut varier par manette)
-        self._r1_idx = 5   # Indice bouton R1
-        self._xbox_lt_positive = False  # True = PS3 via SCP (L2 = axe positif)
-        self._r2_digital_btn = None     # Pour PS4/PS5 : index bouton R2 digital
         self._connect()
 
     def _connect(self) -> bool:
@@ -67,25 +70,14 @@ class Controller:
         print(f"🎮 Manette détectée : {self.joystick.get_name()}")
         if "xbox" in name or "xinput" in name:
             self.controller_type = "xbox"
-            if "xbox 360" in name:
-                # SCP Toolkit (PS3 → Xbox 360) : L2=axe positif, R2=axe négatif (inversé vs vrai Xbox)
-                self._xbox_lt_positive = True
-                self._l1_idx, self._r1_idx = 5, 6
-            else:
-                self._l1_idx, self._r1_idx = 4, 5  # Vrai Xbox LB/RB
         elif any(k in name for k in ("ps3", "dualshock 3", "playstation(r)3", "sixaxis")):
-            self.controller_type = "ps3"
-            self._l1_idx, self._r1_idx = 10, 11  # L1/R1 DualShock 3 DirectInput
+            self.controller_type = "ps3"  # Détecté avant "ps" (plus spécifique)
         elif any(k in name for k in ("playstation", "dualshock", "dualsense", "ps4", "ps5", "sony", "wireless controller")):
             self.controller_type = "ps"
-            self._l1_idx, self._r1_idx = 5, 6   # L1/R1 PS4/PS5
-            self._r2_digital_btn = 8             # R2 = bouton digital uniquement
         self._axis_map = self.AXIS_MAP[self.controller_type]
         n_axes = self.joystick.get_numaxes()
         n_btns = self.joystick.get_numbuttons()
         print(f"   Type détecté : {self.controller_type}  |  axes={n_axes}  boutons={n_btns}")
-        print(f"   L1=btn{self._l1_idx}  R1=btn{self._r1_idx}" +
-              (f"  R2=btn{self._r2_digital_btn}" if self._r2_digital_btn else ""))
         return True
 
     def _apply_deadzone(self, value: float) -> float:
@@ -139,32 +131,19 @@ class Controller:
                 else 0.0
             )
 
-        # ── Boutons (lus en premier pour R2 digital PS4) ───────────────
-        buttons = {
-            i: bool(self.joystick.get_button(i))
-            for i in range(self.joystick.get_numbuttons())
-        }
-
         # ── Lecture des gâchettes ──────────────────────────────────────
         lt_raw = safe_axis(m["lt"])
-        rt_raw = safe_axis(m["rt"])
+        rt_raw = safe_axis(m["rt"])  # 0.0 si axe hors plage
 
         if self.controller_type == "xbox" and num_axes <= 5:
-            # Xbox/PS3-Xbox : gâchettes combinées sur l'axe 2
+            # Xbox 360 DirectInput : gâchettes combinées sur l'axe 2
+            # LT = côté négatif, RT = côté positif
             combined = safe_axis(2)
-            if self._xbox_lt_positive:
-                # SCP Toolkit PS3 : L2=positif, R2=négatif
-                lt = max(0.0, combined)
-                rt = max(0.0, -combined)
-            else:
-                # Vrai Xbox 360 : LT=négatif, RT=positif
-                lt = max(0.0, -combined)
-                rt = max(0.0, combined)
-        elif self._r2_digital_btn is not None:
-            # PS4/PS5 : L2 analogique (axe 4), R2 digital uniquement (bouton)
-            lt = (lt_raw + 1) / 2 if lt_raw < -0.5 else max(0.0, lt_raw)
-            rt = 1.0 if buttons.get(self._r2_digital_btn, False) else 0.0
+            lt = max(0.0, -combined)
+            rt = max(0.0, combined)
         elif m["rt"] >= num_axes:
+            # Axe RT hors plage : gâchettes probablement combinées sur l'axe LT
+            # L2 = côté positif, R2 = côté négatif
             lt = max(0.0, lt_raw)
             rt = max(0.0, -lt_raw)
         else:
@@ -172,7 +151,12 @@ class Controller:
             lt = (lt_raw + 1) / 2 if lt_raw < -0.5 else max(0.0, lt_raw)
             rt = (rt_raw + 1) / 2 if rt_raw < -0.5 else max(0.0, rt_raw)
 
+        buttons = {
+            i: bool(self.joystick.get_button(i))
+            for i in range(self.joystick.get_numbuttons())
+        }
         hat = self.joystick.get_hat(0) if self.joystick.get_numhats() > 0 else (0, 0)
+        l1_idx, r1_idx = self.L1R1_MAP[self.controller_type]
         return ControllerState(
             timestamp=time.time(),
             axis_left_x=safe_axis(m["lx"]),
@@ -184,8 +168,8 @@ class Controller:
             buttons=buttons,
             hat=hat,
             source="controller",
-            button_l1=buttons.get(self._l1_idx, False),
-            button_r1=buttons.get(self._r1_idx, False),
+            button_l1=buttons.get(l1_idx, False),
+            button_r1=buttons.get(r1_idx, False),
         )
 
     def is_connected(self) -> bool:
