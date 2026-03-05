@@ -30,7 +30,7 @@ Le système comprend :
 |---|---|
 | 🕹️ **4 mini-jeux** | Reflex, Labyrinthe, Shooter, Racing — chacun mesure des axes différents |
 | 📡 **Capture temps réel** | Inputs manette échantillonnés à 30 Hz via Pygame |
-| 🧠 **Clustering UMAP + K-Means** | 4 profils de joueurs : Agressif, Prudent, Précis, Chaotique |
+| 🧠 **Clustering UMAP + K-Means** | 3–4 profils de joueurs : Agressif, Prudent, Précis, Chaotique |
 | 🤖 **Agent imitateur** | Rejoue fidèlement le style d'un joueur enregistré (bruit configurable) |
 | 💬 **Coach IA Mistral** | Analyse de session personnalisée avec conseils actionnables |
 | 📊 **Dashboard Dash** | Leaderboard, résumés IA, visualisation UMAP, flux d'inputs live |
@@ -64,7 +64,6 @@ SISE_ULTIMATE_GAMES/
 │
 ├── app/                     # Dashboard Dash
 │   ├── app.py               # Application principale multi-pages
-│   ├── requirements.txt     # Dépendances spécifiques au dashboard
 │   └── assets/              # CSS, polices, images
 │
 └── test_controller.py       # Diagnostic manette (standalone)
@@ -125,23 +124,26 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # conda
-conda install --file requirements.txt
+pip install -r requirements.txt
 
-# uv
-uv pip install -r requirements.txt
+# uv (recommandé — lit pyproject.toml + uv.lock)
+uv sync
 ```
 
 ### 4. Configurer les variables d'environnement
 
-Créer un fichier `.env` à la racine du projet :
-
-```env
-SUPABASE_URL=https://votre-projet.supabase.co
-SUPABASE_KEY=votre_clé_anon_publique
-MISTRAL_API_KEY=votre_clé_api_mistral
+```bash
+cp .env.example .env
+# puis remplir les valeurs dans .env
 ```
 
-> **Sans ces clés**, l'application fonctionne en mode dégradé :  
+| Variable | Où la trouver |
+|---|---|
+| `SUPABASE_URL` | Dashboard Supabase → Settings → API → Project URL |
+| `SUPABASE_KEY` | Dashboard Supabase → Settings → API → anon public key |
+| `MISTRAL_API_KEY` | [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) |
+
+> **Sans ces clés**, l'application fonctionne en mode dégradé :
 > les sessions sont sauvegardées localement en CSV et les résumés IA sont générés localement (mock).
 
 ---
@@ -185,16 +187,29 @@ Ouvrir [http://localhost:8050](http://localhost:8050) dans votre navigateur.
 Il est aussi possible de lancer un jeu sans passer par le dashboard :
 
 ```bash
-python main.py <nom_joueur> <jeu>
+python main.py <jeu> <nom_joueur>
+# ou avec flags nommés
+python main.py --game <jeu> --player <nom_joueur>
 # Exemple
-python main.py Modou shooter
+python main.py shooter Modou
 ```
 
 > ⚠️ Dans ce cas, les stats ne sont pas visualisées en temps réel — uniquement sauvegardées dans Supabase et consultables ensuite dans le dashboard.
 
+### Analyse shooter standalone
+
+`analysis_shooter.py` peut être lancé indépendamment du dashboard pour générer des graphiques matplotlib (clustering, progression, corrélations) depuis les données Supabase ou le CSV local :
+
+```bash
+python analysis_shooter.py
+# Les graphiques sont sauvegardés dans outputs/
+```
+
 ### Diagnostiquer la manette
 
 ```bash
+python main.py --test
+# ou directement
 python test_controller.py
 ```
 
@@ -202,7 +217,7 @@ python test_controller.py
 
 ## 📊 Features extraites par session
 
-Chaque session génère **21 features** utilisées pour le clustering :
+Chaque session génère **20 features** utilisées pour le clustering :
 
 | Catégorie | Features |
 |---|---|
@@ -252,6 +267,45 @@ Projet réalisé dans le cadre du **Challenge IA Temps Réel — Master SISE 202
 | **Nico Dena** | [@DenaNico1](https://github.com/DenaNico1) |
 
 🔗 **Dépôt GitHub :** [YassineCHN/SISE_ULTIMATE_GAMES](https://github.com/YassineCHN/SISE_ULTIMATE_GAMES/tree/main)
+
+---
+
+## 🗄️ Schéma Supabase (nouveau projet)
+
+> **Uniquement si vous utilisez votre propre instance Supabase.** Les `.env` fournis par l'équipe pointent vers une instance déjà configurée.
+
+```sql
+create table sessions (
+  id bigint generated always as identity primary key,
+  created_at timestamptz default now(),
+  player_name text, game_id text, duration_sec float,
+  btn_press_rate float, btn_variety float, btn_hold_avg_ms float,
+  lx_mean float, ly_mean float, lx_std float, ly_std float, lx_direction_changes float,
+  rx_mean float, ry_mean float, rx_std float, ry_std float,
+  lt_mean float, rt_mean float, lt_brutality float, rt_brutality float,
+  reaction_time_avg_ms float, input_regularity float, score int
+);
+
+create table summaries (
+  id bigint generated always as identity primary key,
+  created_at timestamptz default now(),
+  player_name text, game_id text, summary_md text
+);
+
+create table inputs_live (
+  id bigint generated always as identity primary key,
+  captured_at timestamptz default now(),
+  player_name text, game_id text, session_token text,
+  lx float, ly float, rx float, ry float, lt float, rt float,
+  btn_a bool, btn_b bool, btn_x bool, btn_y bool, event_type text
+);
+
+create table profils_ml (
+  player_name text primary key,
+  updated_at timestamptz default now(),
+  cluster_id int, cluster_name text, features_json jsonb
+);
+```
 
 ---
 
