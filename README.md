@@ -160,6 +160,8 @@ L'application est conçue pour être pilotée depuis le **dashboard Dash**. C'es
 ```bash
 cd app
 python app.py
+# ou avec uv
+uv run app.py
 ```
 
 Ouvrir [http://localhost:8050](http://localhost:8050) dans votre navigateur.
@@ -193,6 +195,8 @@ python main.py <jeu> <nom_joueur>
 python main.py --game <jeu> --player <nom_joueur>
 # Exemple
 python main.py shooter Modou
+# ou avec uv
+uv run main.py shooter Modou
 ```
 
 > ⚠️ Dans ce cas, les stats ne sont pas visualisées en temps réel — uniquement sauvegardées dans Supabase et consultables ensuite dans le dashboard.
@@ -203,6 +207,8 @@ python main.py shooter Modou
 
 ```bash
 python analysis_shooter.py
+# ou avec uv
+uv run analysis_shooter.py
 # Les graphiques sont sauvegardés dans outputs/
 ```
 
@@ -214,6 +220,8 @@ python analysis_shooter.py
 python main.py --test
 # ou directement
 python test_controller.py
+# ou avec uv
+uv run test_controller.py
 ```
 
 **Manettes testées et supportées :**
