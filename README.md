@@ -357,7 +357,8 @@ create table sessions (
   lx_mean float, ly_mean float, lx_std float, ly_std float, lx_direction_changes float,
   rx_mean float, ry_mean float, rx_std float, ry_std float,
   lt_mean float, rt_mean float, lt_brutality float, rt_brutality float,
-  reaction_time_avg_ms float, input_regularity float, score int
+  reaction_time_avg_ms float, input_regularity float, score int,
+  source text default 'unknown'
 );
 
 create table summaries (

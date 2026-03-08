@@ -41,6 +41,7 @@ SESSION_COLUMNS = [
     "reaction_time_avg_ms",
     "input_regularity",
     "score",
+    "source",
 ]
 
 
